@@ -1,11 +1,10 @@
 const mongoose = require('mongoose');
 
 const reminderSchema = new mongoose.Schema({
-    reminderName: String,
-    reminderDescription: String,
-    executionDate: Date,
-    userEmail: String,
-    isCompleted: Boolean,
+    task: { type: String, required: true },
+    executionDate: { type: Date, required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    isCompleted: { type: Boolean, default: false }
 });
 
 const Reminder = mongoose.model('Reminder', reminderSchema);

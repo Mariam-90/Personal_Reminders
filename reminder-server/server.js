@@ -12,8 +12,8 @@ app.use(bodyParser.json());
 
 // MongoDB connection
 mongoose.connect('mongodb://localhost:27017/reminders', {
-  useNewUrlParser: true, // אפשרות זו כבר לא נחוצה בגרסה 4 ומעלה של ה-driver
-  useUnifiedTopology: true // אפשרות זו כבר לא נחוצה בגרסה 4 ומעלה של ה-driver
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
 }).then(() => {
   console.log('Connected to MongoDB');
 }).catch((error) => {

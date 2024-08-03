@@ -34,7 +34,7 @@ function App() {
     const interval = setInterval(() => {
       const now = new Date();
       reminders.forEach(reminder => {
-        const reminderDate = new Date(`${reminder.date}T${reminder.time}`);
+        const reminderDate = new Date(reminder.executionDate);
         if (reminderDate <= now) {
           audio.play();
           // הסרה או עדכון של התזכורת שהושמעה
@@ -50,7 +50,9 @@ function App() {
     if (task.trim() && date.trim() && time.trim()) {
       try {
         const newReminder = { task, date, time };
+        console.log("Reminder to be added: ", newReminder);
         const response = await axios.post(`http://localhost:5000/api/reminders/${user._id}`, newReminder);
+        console.log("Added reminder response: ", response.data);
         setReminders([...reminders, response.data]);
         setTask('');
         setDate('');
@@ -81,66 +83,64 @@ function App() {
               <Register setUser={setUser} toggleView={toggleView} />
             ) : (
               <Login setUser={setUser} toggleView={toggleView} />
-           
             )}
-            </div>
-          ) : (
+          </div>
+        ) : (
+          <div>
             <div>
-              <div>
-                <h2>Add a new reminder</h2>
-                <form onSubmit={addReminder}>
-                  <label>
-                    Task:
-                    <input 
-                      type="text" 
-                      value={task} 
-                      onChange={(e) => setTask(e.target.value)} 
-                    />
-                  </label>
-                  <label>
-                    Date:
-                    <input 
-                      type="date" 
-                      value={date} 
-                      onChange={(e) => setDate(e.target.value)} 
-                    />
-                  </label>
-                  <label>
-                    Time:
-                    <input 
-                      type="time" 
-                      value={time} 
-                      onChange={(e) => setTime(e.target.value)} 
-                    />
-                  </label>
-                  <button type="submit">Add Reminder</button>
-                </form>
-              </div>
-              <div>
-                <button onClick={toggleShowReminders}>
-                  {showReminders ? 'Hide Reminders' : 'Show Reminders'}
-                </button>
-                <div className={`reminder-container ${showReminders ? 'show' : ''}`}>
-                  <h2>Your Reminders</h2>
-                  <ul>
-                    {reminders.map((reminder) => (
-                      <li key={reminder._id}>
-                        <span className="reminder-item">
-                          {reminder.task}
-                          <span className="reminder-date">{reminder.date}</span>
-                          <span className="reminder-time">{reminder.time}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+              <h2>Add a new reminder</h2>
+              <form onSubmit={addReminder}>
+                <label>
+                  Task:
+                  <input 
+                    type="text" 
+                    value={task} 
+                    onChange={(e) => setTask(e.target.value)} 
+                  />
+                </label>
+                <label>
+                  Date:
+                  <input 
+                    type="date" 
+                    value={date} 
+                    onChange={(e) => setDate(e.target.value)} 
+                  />
+                </label>
+                <label>
+                  Time:
+                  <input 
+                    type="time" 
+                    value={time} 
+                    onChange={(e) => setTime(e.target.value)} 
+                  />
+                </label>
+                <button type="submit">Add Reminder</button>
+              </form>
+            </div>
+            <div>
+              <button onClick={toggleShowReminders}>
+                {showReminders ? 'Hide Reminders' : 'Show Reminders'}
+              </button>
+              <div className={`reminder-container ${showReminders ? 'show' : ''}`}>
+                <h2>Your Reminders</h2>
+                <ul>
+                  {reminders.map((reminder) => (
+                    <li key={reminder._id}>
+                      <span className="reminder-item">
+                        {reminder.task}
+                        <span className="reminder-date">{new Date(reminder.executionDate).toLocaleDateString()}</span>
+                        <span className="reminder-time">{new Date(reminder.executionDate).toLocaleTimeString()}</span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
-          )}
-        </main>
-      </div>
-    );
-  }
-  
-  export default App;
-  
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+
+export default App;
