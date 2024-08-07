@@ -20,6 +20,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
+    console.log('Received data:', username, password); // Log received data for debugging
     const user = await User.findOne({ username });
     if (user && await bcrypt.compare(password, user.password)) {
       res.status(200).json(user);
