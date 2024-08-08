@@ -4,7 +4,8 @@ const reminderSchema = new mongoose.Schema({
     task: { type: String, required: true },
     executionDate: { type: Date, required: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    isCompleted: { type: Boolean, default: false }
+    isCompleted: { type: Boolean, default: false },
+    audioFileName: { type: String } // שדה חדש לשם קובץ האודיו
 });
 
 const Reminder = mongoose.model('Reminder', reminderSchema);
