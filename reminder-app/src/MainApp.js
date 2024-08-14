@@ -33,11 +33,13 @@ function MainApp() {
   const playAudio = (audioFileName) => {
     const audioPath = `http://localhost:5000/uploads/${audioFileName}`;
     const audio = new Audio(audioPath);
+  
     audio.play().catch(error => {
       console.error('Audio play failed:', error);
+      console.error('Failed to load audio file from:', audioPath);
     });
   };
-
+  
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
@@ -140,7 +142,7 @@ function MainApp() {
         <div>
           <NavBar onNavClick={handleNavClick} activeView={view} />
           {view === 'add' && <AddReminder userId={user._id} onAdd={addReminder} />}
-          {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} />}
+          {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} fetchReminders={fetchReminders} />} {/* העברת הפונקציה ל-ReminderTable */}
           {view === 'status' && <div>Status View (TODO: Implement Status)</div>}
           {view === 'completed' && <div>Completed Tasks View (TODO: Implement Completed Tasks)</div>}
         </div>

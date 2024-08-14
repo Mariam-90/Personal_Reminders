@@ -1,6 +1,19 @@
 import React from 'react';
+import axios from 'axios';
 
-function ReminderTable({ reminders, onComplete }) {
+function ReminderTable({ reminders, onComplete, fetchReminders }) {
+  
+  const handleDelete = async (reminderId) => {
+    try {
+      console.log('Deleting reminder:', reminderId);
+      const response = await axios.delete(`http://localhost:5000/api/reminders/${reminderId}`);
+      console.log('Deleted reminder:', response.data);
+      fetchReminders(); // עדכון רשימת התזכורות לאחר המחיקה
+    } catch (error) {
+      console.error('Failed to delete reminder:', error.response ? error.response.data : error.message);
+    }
+  };
+
   return (
     <div className="reminder-table-container">
       <h2>התזכורות שלי</h2>
@@ -12,6 +25,7 @@ function ReminderTable({ reminders, onComplete }) {
             <th>שעה</th>
             <th>אודיו</th>
             <th>סטטוס</th>
+            <th>מחיקה</th>
           </tr>
         </thead>
         <tbody>
@@ -29,11 +43,14 @@ function ReminderTable({ reminders, onComplete }) {
                     <button onClick={() => onComplete(reminder._id)}>סמן כהושלמה</button>
                   )}
                 </td>
+                <td>
+                  <button onClick={() => handleDelete(reminder._id)}>מחק</button>
+                </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="5">אין תזכורות להצגה</td>
+              <td colSpan="6">אין תזכורות להצגה</td>
             </tr>
           )}
         </tbody>
