@@ -6,7 +6,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start; /* שינוי כדי להתחיל מהניווט למעלה */
   align-items: center;
 }
 
@@ -20,6 +20,47 @@
   font-size: calc(10px + 2vmin);
   color: white;
 }
+nav.navbar {
+  background-color: #1e1e1e; /* צבע כהה יותר */
+  width: 100%;
+  padding: 15px 0;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  position: sticky;
+  top: 0;
+  z-index: 1000; /* שמירה על מיקום הניווט גם בגלילה */
+}
+
+nav.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-around;
+  width: 60%; /* מקטין את הרוחב לשמירה על אסתטיקה */
+}
+
+nav.navbar ul li {
+  color: white;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+nav.navbar ul li:hover {
+  background-color: #575757;
+  border-radius: 5px;
+  transform: scale(1.05); /* אפקט הגדלה קל */
+}
+
+nav.navbar ul li.active {
+  background-color: #ffa500;
+  color: black;
+  border-radius: 5px;
+}
+
 
 form {
   margin: 20px auto;
@@ -116,4 +157,51 @@ a {
 
 a:hover {
   text-decoration: underline;
+}
+.reminder-table-container {
+  margin: 20px auto;
+  width: 80%;
+  max-width: 800px;
+  text-align: left;
+  color: white;
+}
+
+.reminder-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.reminder-table th, .reminder-table td {
+  padding: 12px;
+  border: 1px solid #333;
+}
+
+.reminder-table th {
+  background-color: #333;
+  color: #ffa500;
+  text-align: left;
+}
+
+.reminder-table td {
+  color: #b3b3b3;
+}
+
+.reminder-table tr:nth-child(even) {
+  background-color: #2a2a2a;
+}
+.reminder-table button {
+  background-color: #ffa500;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.reminder-table button:hover {
+  background-color: #e69500;
 }
