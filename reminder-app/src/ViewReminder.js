@@ -3,7 +3,7 @@ import { Button, Table, TableBody, TableCell, TableContainer, TableHead, TableRo
 import axios from "axios";
 import Alert from "@mui/material/Alert";
 
-const URL = "http://localhost:5000";
+const URL = "http://localhost:5001";
 
 export default function ViewReminder({ reminder, temp, setTemp }) {
   const handleDoneButtonClick = () => {

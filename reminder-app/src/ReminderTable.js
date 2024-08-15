@@ -6,7 +6,7 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
   const handleDelete = async (reminderId) => {
     try {
       console.log('Deleting reminder:', reminderId);
-      const response = await axios.delete(`http://localhost:5000/api/reminders/${reminderId}`);
+      const response = await axios.delete(`http://localhost:5001/api/reminders/${reminderId}`);
       console.log('Deleted reminder:', response.data);
       fetchReminders(); // עדכון רשימת התזכורות לאחר המחיקה
     } catch (error) {
@@ -36,6 +36,7 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
                 <td>{new Date(reminder.executionDate).toLocaleDateString('he-IL')}</td>
                 <td>{new Date(reminder.executionDate).toLocaleTimeString('he-IL')}</td>
                 <td>{reminder.audioFileName || 'ללא אודיו'}</td>
+
                 <td>
                   {reminder.isCompleted ? (
                     'הושלמה'

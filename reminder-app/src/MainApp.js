@@ -13,12 +13,12 @@ function MainApp() {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [view, setView] = useState('add');
-  const [audioFile, setAudioFile] = useState(null); // שמירה של קובץ האודיו האחרון
+  const [audioFile, setAudioFile] = useState(null); // שמירה של שם קובץ האודיו האחרון
 
   const fetchReminders = useCallback(async () => {
     if (user) {
       try {
-        const response = await axios.get(`http://localhost:5000/api/reminders/${user._id}`);
+        const response = await axios.get(`http://localhost:5001/api/reminders/${user._id}`);
         setReminders(response.data);
       } catch (err) {
         console.error(err);
@@ -31,7 +31,13 @@ function MainApp() {
   }, [fetchReminders]);
 
   const playAudio = (audioFileName) => {
-    const audioPath = `http://localhost:5000/uploads/${audioFileName}`;
+    console.log('Trying to play:', audioFileName);
+    if (typeof audioFileName !== 'string') {
+      console.error('Invalid audio file name:', audioFileName);
+      return;
+    }
+    
+    const audioPath = `http://localhost:5001/uploads/${audioFileName}`;
     const audio = new Audio(audioPath);
   
     audio.play().catch(error => {
@@ -43,16 +49,16 @@ function MainApp() {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-
+  
       reminders.forEach(reminder => {
         const reminderDate = new Date(reminder.executionDate);
         const alertDate = new Date(reminderDate.getTime() - 30 * 60 * 1000); // 30 דקות לפני הזמן שנקבע
-
+  
         if (now >= alertDate && now < reminderDate && !reminder.isCompleted && !reminder.isAlerted) {
           playAudio(reminder.audioFileName || audioFile); // הפעלת הצליל
-
+  
           // סימון התזכורת כהושמעה כדי למנוע צליל נוסף
-          axios.put(`http://localhost:5000/api/reminders/${reminder._id}`, { isAlerted: true })
+          axios.put(`http://localhost:5001/api/reminders/${reminder._id}`, { isAlerted: true })
             .then(() => {
               setReminders(prevReminders =>
                 prevReminders.map(r =>
@@ -66,10 +72,10 @@ function MainApp() {
         }
       });
     }, 60000); // בדיקה כל דקה
-
+  
     return () => clearInterval(interval);
   }, [reminders, audioFile]);
-
+  
   const addReminder = async ({ task, date, time, audioFile: newAudioFile }) => {
     try {
       const formData = new FormData();
@@ -81,26 +87,27 @@ function MainApp() {
       // אם המשתמש העלה קובץ אודיו חדש, נשתמש בו ונעדכן את ה-state
       if (newAudioFile) {
         formData.append('audioFile', newAudioFile);
-        setAudioFile(newAudioFile); // עדכון הקובץ ב-state
+        setAudioFile(newAudioFile.name); // עדכון ה-state עם שם הקובץ בלבד
       } else if (audioFile) {
         formData.append('audioFile', audioFile);
       }
-
-      const response = await axios.post(`http://localhost:5000/api/reminders/${user._id}`, formData, {
+  
+      const response = await axios.post(`http://localhost:5001/api/reminders/${user._id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-
+  
       setReminders([...reminders, response.data]);
     } catch (err) {
-      console.error('Error in adding reminder:', err.response.data);
+      console.error('Error in adding reminder:', err.response?.data || err.message);
     }
   };
+  
 
   const completeReminder = async (id) => {
     try {
-      await axios.put(`http://localhost:5000/api/reminders/${id}`, { isCompleted: true });
+      await axios.put(`http://localhost:5001/api/reminders/${id}`, { isCompleted: true });
       setReminders(prevReminders => 
         prevReminders.map(reminder => 
           reminder._id === id ? { ...reminder, isCompleted: true } : reminder

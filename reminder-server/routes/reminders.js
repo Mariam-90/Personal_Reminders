@@ -10,65 +10,115 @@ module.exports = (upload) => {
     try {
       const { userId } = req.params;
       const reminders = await Reminder.find({ userId });
+  
+      // הדפסת שמות קבצי האודיו לכל תזכורת
+      reminders.forEach(reminder => {
+        console.log(`Reminder ID: ${reminder._id}, Audio File: ${reminder.audioFileName}`);
+      });
+  
       res.status(200).json(reminders);
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
   });
+  
 
   // Add new reminder
   router.post('/:userId', upload.single('audioFile'), async (req, res) => {
     try {
       const { userId } = req.params;
-      const { task, date, time, recurrence, audioFile } = req.body; // קבלת שם קובץ הצליל אם נשלח
+      const { task, date, time, recurrence } = req.body;
       const executionDate = new Date(`${date}T${time}:00`);
-
+  
       if (isNaN(executionDate.getTime())) {
         throw new Error("Invalid date or time format");
       }
-
+  
       let audioFileName = null;
+  
       if (req.file) {
         audioFileName = req.file.filename;
-        console.log(`File saved as ${audioFileName}`);
-      } else if (audioFile) {
-        // אם לא נשלח קובץ חדש, השתמש בשם קובץ הצליל שנשמר קודם לכן
-        audioFileName = audioFile;
+      } else {
+        // אם לא נשלח קובץ אודיו חדש, נבדוק אם יש תזכורת קודמת עם אודיו
+        const lastReminderWithAudio = await Reminder.findOne({ userId, audioFileName: { $ne: null } }).sort({ executionDate: -1 });
+        if (lastReminderWithAudio) {
+          audioFileName = lastReminderWithAudio.audioFileName;
+        }
       }
-
-      const newReminder = new Reminder({ 
-        task, 
-        executionDate, 
-        userId, 
-        isCompleted: false, 
+  
+      const newReminder = new Reminder({
+        task,
+        executionDate,
+        userId,
+        isCompleted: false,
         audioFileName,
         recurrence
       });
-
+      
+      console.log('New reminder created:', newReminder);
+      
       await newReminder.save();
+      const savedReminder = await newReminder.save();
+      console.log('Saved reminder:', savedReminder);
+
       res.status(201).json(newReminder);
     } catch (error) {
       console.error('Error:', error.message);
       res.status(400).json({ error: error.message });
     }
   });
+  
+   
 
   // Update reminder by ID
-  router.put('/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const updateData = { ...req.body };
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = { ...req.body };
 
-      if (updateData.isCompleted) {
-        updateData.completionDate = new Date();  // שמירת זמן הביצוע
-      }
+    const updatedReminder = await Reminder.findByIdAndUpdate(id, updateData, { new: true });
 
-      const updatedReminder = await Reminder.findByIdAndUpdate(id, updateData, { new: true });
-      res.status(200).json(updatedReminder);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
+    // כאן תוכל לבדוק אם שם קובץ האודיו קיים
+    console.log('Audio File Name:', updatedReminder.audioFileName);
+
+    // אם חזרתיות מוגדרת, ניצור תזכורת חדשה בתאריך הבא
+    if (updatedReminder.recurrence !== 'none' && updatedReminder.isCompleted) {
+      const nextExecutionDate = getNextExecutionDate(updatedReminder.executionDate, updatedReminder.recurrence);
+
+      const newReminder = new Reminder({
+        task: updatedReminder.task,
+        executionDate: nextExecutionDate,
+        userId: updatedReminder.userId,
+        recurrence: updatedReminder.recurrence,
+        audioFileName: updatedReminder.audioFileName // וודא שהאודיו מועבר לתזכורת החדשה
+      });
+
+      await newReminder.save();
     }
-  });
+
+    res.status(200).json(updatedReminder);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+  
+  // פונקציה למציאת תאריך הבא לפי חזרתיות
+  function getNextExecutionDate(date, recurrence) {
+    const newDate = new Date(date);
+  
+    if (recurrence === 'daily') {
+      newDate.setDate(newDate.getDate() + 1);
+    } else if (recurrence === 'weekly') {
+      newDate.setDate(newDate.getDate() + 7);
+    } else if (recurrence === 'monthly') {
+      newDate.setMonth(newDate.getMonth() + 1);
+    }
+  
+    return newDate;
+  }
+  
+  
 
   // Get weekly summary
   router.get('/summary/:userId', async (req, res) => {

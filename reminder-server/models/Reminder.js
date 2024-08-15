@@ -7,7 +7,9 @@ const reminderSchema = new mongoose.Schema({
     isCompleted: { type: Boolean, default: false },
     hasPlayedAudio: { type: Boolean, default: false },
     hasSpokenText: { type: Boolean, default: false },
+    recurrence: { type: String, enum: ['daily', 'weekly', 'monthly', 'none'], default: 'none' } // שדה חדש לחזרתיות
 });
+
 
 const Reminder = mongoose.model('Reminder', reminderSchema);
 

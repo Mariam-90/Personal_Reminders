@@ -9,7 +9,7 @@ const Register = ({ setUser, toggleView }) => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/api/users/register', { username, password });
+      const response = await axios.post('http://localhost:5001/api/users/register', { username, password });
       setUser(response.data);
     } catch (err) {
       setError('Registration failed. Please check your credentials.');
