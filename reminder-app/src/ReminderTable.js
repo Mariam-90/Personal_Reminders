@@ -8,7 +8,7 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
       console.log('Deleting reminder:', reminderId);
       const response = await axios.delete(`http://localhost:5001/api/reminders/${reminderId}`);
       console.log('Deleted reminder:', response.data);
-      fetchReminders(); // עדכון רשימת התזכורות לאחר המחיקה
+      fetchReminders(); // קורא לפונקציה לאחר המחיקה כדי לעדכן את הרשימה
     } catch (error) {
       console.error('Failed to delete reminder:', error.response ? error.response.data : error.message);
     }

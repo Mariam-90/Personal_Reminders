@@ -152,7 +152,8 @@ function MainApp() {
         <div>
           <NavBar onNavClick={handleNavClick} activeView={view} />
           {view === 'add' && <AddReminder userId={user._id} onAdd={addReminder} />}
-          {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} />}
+          {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} fetchReminders={fetchReminders} />
+        }
           {view === 'status' && <StatusView reminders={reminders} />} {/* הוספת תצוגת הסטטוס */}
           {view === 'completed' && <CompletedTasksView reminders={reminders} />}
         </div>
