@@ -1,0 +1,41 @@
+.completed-tasks-view {
+    margin: 20px;
+    padding: 20px;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    color: #fff;
+  }
+  
+  .completed-tasks-title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #f0a500;
+  }
+  
+  .completed-tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 16px;
+    color: #fff;
+  }
+  
+  .completed-tasks-table th, .completed-tasks-table td {
+    padding: 10px;
+    text-align: center;
+  }
+  
+  .completed-tasks-table th {
+    background-color: #444;
+    color: #f0a500;
+    border-bottom: 2px solid #f0a500;
+  }
+  
+  .completed-tasks-table td {
+    background-color: #333;
+    border-bottom: 1px solid #555;
+  }
+  
+  .completed-tasks-table tr:hover {
+    background-color: #555;
+  }
+  

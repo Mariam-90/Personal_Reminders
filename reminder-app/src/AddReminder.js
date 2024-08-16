@@ -18,48 +18,47 @@ function AddReminder({ userId, onAdd }) {
       setTask('');
       setDate('');
       setTime('');
-      setAudioFile(null); // נמחוק את קובץ האודיו מה-state רק אם המשתמש מעלה קובץ חדש
+      setAudioFile(null); // נשמור רק אם המשתמש מעלה קובץ חדש
       setRecurrence('none');
     }
   };
 
   return (
     <div>
-      <h2>Add a new reminder</h2>
+      <h2>הוסף תזכורת חדשה</h2>
       <form onSubmit={handleSubmit}>
-        {/* שאר השדות */}
         <label>
-          Task:
+          מְשִׁימָה:
           <input type="text" value={task} onChange={(e) => setTask(e.target.value)} />
         </label>
         <br />
         <label>
-          Date:
+          תַאֲרִיך:
           <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </label>
         <br />
         <label>
-          Time:
+          זְמַן:
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </label>
         <br />
         <label>
-          Audio:
+          שֶׁמַע:
           <input type="file" accept="audio/*" onChange={handleAudioUpload} />
           {audioFile && <span> (הקובץ הנוכחי ישמש אם לא יעלה חדש)</span>}
         </label>
         <br />
         <label>
-          Recurrence:
+          הִשָׁנוּת:
           <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
-            <option value="none">No Recurrence</option>
-            <option value="daily">Daily</option>
-            <option value="weekly">Weekly</option>
-            <option value="monthly">Monthly</option>
+            <option value="none"> חד פעמי</option>
+            <option value="daily">יוֹמִי</option>
+            <option value="weekly">שבועי</option>
+            <option value="monthly">חודשי</option>
           </select>
         </label>
         <br />
-        <button type="submit">Add Reminder</button>
+        <button type="submit">הוספת תזכורת</button>
       </form>
     </div>
   );

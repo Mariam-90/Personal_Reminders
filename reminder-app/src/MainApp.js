@@ -5,6 +5,8 @@ import Login from './Login';
 import AddReminder from './AddReminder';
 import NavBar from './NavBar';
 import ReminderTable from './ReminderTable';
+import StatusView from './StatusView'; // ייבוא StatusView
+import CompletedTasksView from './CompletedTasksView';
 
 function MainApp() {
   const [reminders, setReminders] = useState([]);
@@ -75,7 +77,7 @@ function MainApp() {
   
     return () => clearInterval(interval);
   }, [reminders, audioFile]);
-  
+
   const addReminder = async ({ task, date, time, audioFile: newAudioFile }) => {
     try {
       const formData = new FormData();
@@ -103,20 +105,21 @@ function MainApp() {
       console.error('Error in adding reminder:', err.response?.data || err.message);
     }
   };
-  
 
   const completeReminder = async (id) => {
     try {
-      await axios.put(`http://localhost:5001/api/reminders/${id}`, { isCompleted: true });
+      const completionDate = new Date(); // שמירת השעה הנוכחית
+      await axios.put(`http://localhost:5001/api/reminders/${id}`, { isCompleted: true, completionDate });
       setReminders(prevReminders => 
         prevReminders.map(reminder => 
-          reminder._id === id ? { ...reminder, isCompleted: true } : reminder
+          reminder._id === id ? { ...reminder, isCompleted: true, completionDate } : reminder
         )
       );
     } catch (err) {
       console.error('Error completing reminder:', err);
     }
   };
+  
 
   const handleNavClick = (view) => {
     if (view === 'logout') {
@@ -124,8 +127,8 @@ function MainApp() {
       localStorage.removeItem('user');
     } else {
       setView(view);
-      if (view === 'view') {
-        fetchReminders();
+      if (view === 'view' || view === 'status') {
+        fetchReminders(); // טען מחדש את התזכורות גם ב-"סטטוס"
       }
     }
   };
@@ -149,9 +152,9 @@ function MainApp() {
         <div>
           <NavBar onNavClick={handleNavClick} activeView={view} />
           {view === 'add' && <AddReminder userId={user._id} onAdd={addReminder} />}
-          {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} fetchReminders={fetchReminders} />} {/* העברת הפונקציה ל-ReminderTable */}
-          {view === 'status' && <div>Status View (TODO: Implement Status)</div>}
-          {view === 'completed' && <div>Completed Tasks View (TODO: Implement Completed Tasks)</div>}
+          {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} />}
+          {view === 'status' && <StatusView reminders={reminders} />} {/* הוספת תצוגת הסטטוס */}
+          {view === 'completed' && <CompletedTasksView reminders={reminders} />}
         </div>
       )}
     </div>

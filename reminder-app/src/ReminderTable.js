@@ -23,7 +23,6 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
             <th>משימה</th>
             <th>תאריך</th>
             <th>שעה</th>
-            <th>אודיו</th>
             <th>סטטוס</th>
             <th>מחיקה</th>
           </tr>
@@ -35,7 +34,7 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
                 <td>{reminder.task}</td>
                 <td>{new Date(reminder.executionDate).toLocaleDateString('he-IL')}</td>
                 <td>{new Date(reminder.executionDate).toLocaleTimeString('he-IL')}</td>
-                <td>{reminder.audioFileName || 'ללא אודיו'}</td>
+                
 
                 <td>
                   {reminder.isCompleted ? (

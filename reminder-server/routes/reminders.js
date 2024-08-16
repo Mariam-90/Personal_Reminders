@@ -21,7 +21,6 @@ module.exports = (upload) => {
       res.status(400).json({ error: error.message });
     }
   });
-  
 
   // Add new reminder
   router.post('/:userId', upload.single('audioFile'), async (req, res) => {
@@ -67,42 +66,48 @@ module.exports = (upload) => {
       res.status(400).json({ error: error.message });
     }
   });
-  
-   
 
   // Update reminder by ID
-router.put('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const updateData = { ...req.body };
+  router.put('/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { isCompleted, completionDate, recurrence } = req.body;
 
-    const updatedReminder = await Reminder.findByIdAndUpdate(id, updateData, { new: true });
+      const updateData = { isCompleted };
 
-    // כאן תוכל לבדוק אם שם קובץ האודיו קיים
-    console.log('Audio File Name:', updatedReminder.audioFileName);
+      // עדכון completionDate אם המסומנת כהושלמה
+      if (isCompleted && !completionDate) {
+        updateData.completionDate = new Date();
+      } else if (completionDate) {
+        updateData.completionDate = new Date(completionDate);
+      }
 
-    // אם חזרתיות מוגדרת, ניצור תזכורת חדשה בתאריך הבא
-    if (updatedReminder.recurrence !== 'none' && updatedReminder.isCompleted) {
-      const nextExecutionDate = getNextExecutionDate(updatedReminder.executionDate, updatedReminder.recurrence);
+      const updatedReminder = await Reminder.findByIdAndUpdate(id, updateData, { new: true });
 
-      const newReminder = new Reminder({
-        task: updatedReminder.task,
-        executionDate: nextExecutionDate,
-        userId: updatedReminder.userId,
-        recurrence: updatedReminder.recurrence,
-        audioFileName: updatedReminder.audioFileName // וודא שהאודיו מועבר לתזכורת החדשה
-      });
+      // כאן תוכל לבדוק אם שם קובץ האודיו קיים
+      console.log('Audio File Name:', updatedReminder.audioFileName);
 
-      await newReminder.save();
+      // אם חזרתיות מוגדרת, ניצור תזכורת חדשה בתאריך הבא
+      if (recurrence !== 'none' && isCompleted) {
+        const nextExecutionDate = getNextExecutionDate(updatedReminder.executionDate, recurrence);
+
+        const newReminder = new Reminder({
+          task: updatedReminder.task,
+          executionDate: nextExecutionDate,
+          userId: updatedReminder.userId,
+          recurrence: updatedReminder.recurrence,
+          audioFileName: updatedReminder.audioFileName // וודא שהאודיו מועבר לתזכורת החדשה
+        });
+
+        await newReminder.save();
+      }
+
+      res.status(200).json(updatedReminder);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
     }
+  });
 
-    res.status(200).json(updatedReminder);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-  
   // פונקציה למציאת תאריך הבא לפי חזרתיות
   function getNextExecutionDate(date, recurrence) {
     const newDate = new Date(date);
@@ -117,8 +122,6 @@ router.put('/:id', async (req, res) => {
   
     return newDate;
   }
-  
-  
 
   // Get weekly summary
   router.get('/summary/:userId', async (req, res) => {
@@ -146,27 +149,20 @@ router.put('/:id', async (req, res) => {
   });
 
   // Delete reminder
-// Delete reminder
-router.delete('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    console.log('Received delete request for ID:', id); // Log the ID
-    const deletedReminder = await Reminder.findByIdAndDelete(id);
-    if (!deletedReminder) {
-      return res.status(404).json({ message: 'Reminder not found' });
+  router.delete('/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log('Received delete request for ID:', id); // Log the ID
+      const deletedReminder = await Reminder.findByIdAndDelete(id);
+      if (!deletedReminder) {
+        return res.status(404).json({ message: 'Reminder not found' });
+      }
+      res.status(200).json({ message: 'Reminder deleted', deletedReminder });
+    } catch (error) {
+      console.error('Error while deleting reminder:', error.message);
+      res.status(400).json({ error: error.message });
     }
-    res.status(200).json({ message: 'Reminder deleted', deletedReminder });
-  } catch (error) {
-    console.error('Error while deleting reminder:', error.message);
-    res.status(400).json({ error: error.message });
-  }
-});
+  });
 
-
-  
-  
-  
-  
-  
   return router;
 };
