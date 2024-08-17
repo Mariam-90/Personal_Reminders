@@ -1,62 +1,83 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 
-function AddReminder({ userId, onAdd }) {
+function AddReminder({ onAdd, selectedAudio }) {
   const [task, setTask] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
   const [recurrence, setRecurrence] = useState('none');
-  const [audioFile, setAudioFile] = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordedAudio, setRecordedAudio] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
-  const handleAudioUpload = (event) => {
-    setAudioFile(event.target.files[0]);
+  const handleVoiceInput = () => {
+    if (isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    } else {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => {
+          mediaRecorderRef.current = new MediaRecorder(stream);
+          audioChunksRef.current = [];
+
+          mediaRecorderRef.current.ondataavailable = (event) => {
+            audioChunksRef.current.push(event.data);
+          };
+
+          mediaRecorderRef.current.onstop = () => {
+            const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+            setRecordedAudio(audioBlob);
+          };
+
+          mediaRecorderRef.current.start();
+          setIsRecording(true);
+        });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (task.trim() && date.trim() && time.trim()) {
-      onAdd({ task, date, time, audioFile, recurrence });
-      setTask('');
-      setDate('');
-      setTime('');
-      setAudioFile(null); // נשמור רק אם המשתמש מעלה קובץ חדש
-      setRecurrence('none');
-    }
+    const selectedAudioFile = recordedAudio || selectedAudio;
+    onAdd({ task, date, time, audioFile: selectedAudioFile, recurrence });
+    setTask('');
+    setDate('');
+    setTime('');
+    setRecurrence('none');
+    setRecordedAudio(null);
   };
 
   return (
     <div>
       <h2>הוסף תזכורת חדשה</h2>
       <form onSubmit={handleSubmit}>
-        <label>
-          מְשִׁימָה:
-          <input type="text" value={task} onChange={(e) => setTask(e.target.value)} />
-        </label>
+        <label>משימה:</label>
+        <input type="text" value={task} onChange={(e) => setTask(e.target.value)} />
+        <br />
+        <label>תאריך:</label>
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+        <br />
+        <label>זמן:</label>
+        <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
+        <br />
+        <label>חזרתיות:</label>
+        <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
+          <option value="none">חד פעמי</option>
+          <option value="daily">יומי</option>
+          <option value="weekly">שבועי</option>
+          <option value="monthly">חודשי</option>
+        </select>
         <br />
         <label>
-          תַאֲרִיך:
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          או הקלטה קולית:
+          <button type="button" onClick={handleVoiceInput}>
+            {isRecording ? 'עצור הקלטה' : 'הקלט משימה 🎤'}
+          </button>
         </label>
-        <br />
-        <label>
-          זְמַן:
-          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} />
-        </label>
-        <br />
-        <label>
-          שֶׁמַע:
-          <input type="file" accept="audio/*" onChange={handleAudioUpload} />
-          {audioFile && <span> (הקובץ הנוכחי ישמש אם לא יעלה חדש)</span>}
-        </label>
-        <br />
-        <label>
-          הִשָׁנוּת:
-          <select value={recurrence} onChange={(e) => setRecurrence(e.target.value)}>
-            <option value="none"> חד פעמי</option>
-            <option value="daily">יוֹמִי</option>
-            <option value="weekly">שבועי</option>
-            <option value="monthly">חודשי</option>
-          </select>
-        </label>
+        {recordedAudio && (
+          <div>
+            <audio controls src={URL.createObjectURL(recordedAudio)}></audio>
+          </div>
+        )}
         <br />
         <button type="submit">הוספת תזכורת</button>
       </form>

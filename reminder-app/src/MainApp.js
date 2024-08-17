@@ -5,8 +5,9 @@ import Login from './Login';
 import AddReminder from './AddReminder';
 import NavBar from './NavBar';
 import ReminderTable from './ReminderTable';
-import StatusView from './StatusView'; // ייבוא StatusView
+import StatusView from './StatusView';
 import CompletedTasksView from './CompletedTasksView';
+import AudioSettings from './AudioSettings';
 
 function MainApp() {
   const [reminders, setReminders] = useState([]);
@@ -15,7 +16,9 @@ function MainApp() {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   const [view, setView] = useState('add');
-  const [audioFile, setAudioFile] = useState(null); // שמירה של שם קובץ האודיו האחרון
+  const [selectedAudio, setSelectedAudio] = useState(() => {
+    return localStorage.getItem('selectedAudio') || 'default.wav';
+  });
 
   const fetchReminders = useCallback(async () => {
     if (user) {
@@ -33,33 +36,21 @@ function MainApp() {
   }, [fetchReminders]);
 
   const playAudio = (audioFileName) => {
-    console.log('Trying to play:', audioFileName);
-    if (typeof audioFileName !== 'string') {
-      console.error('Invalid audio file name:', audioFileName);
-      return;
-    }
-    
-    const audioPath = `http://localhost:5001/uploads/${audioFileName}`;
+    const audioPath = `http://localhost:5001/uploads/${audioFileName || selectedAudio}`;
     const audio = new Audio(audioPath);
-  
     audio.play().catch(error => {
       console.error('Audio play failed:', error);
-      console.error('Failed to load audio file from:', audioPath);
     });
   };
-  
+
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-  
       reminders.forEach(reminder => {
         const reminderDate = new Date(reminder.executionDate);
-        const alertDate = new Date(reminderDate.getTime() - 30 * 60 * 1000); // 30 דקות לפני הזמן שנקבע
-  
+        const alertDate = new Date(reminderDate.getTime() - 30 * 60 * 1000);
         if (now >= alertDate && now < reminderDate && !reminder.isCompleted && !reminder.isAlerted) {
-          playAudio(reminder.audioFileName || audioFile); // הפעלת הצליל
-  
-          // סימון התזכורת כהושמעה כדי למנוע צליל נוסף
+          playAudio(reminder.recordedTaskAudioFileName || reminder.audioFileName);
           axios.put(`http://localhost:5001/api/reminders/${reminder._id}`, { isAlerted: true })
             .then(() => {
               setReminders(prevReminders =>
@@ -73,33 +64,32 @@ function MainApp() {
             });
         }
       });
-    }, 60000); // בדיקה כל דקה
-  
+    }, 60000);
     return () => clearInterval(interval);
-  }, [reminders, audioFile]);
+  }, [reminders, selectedAudio]);
 
-  const addReminder = async ({ task, date, time, audioFile: newAudioFile }) => {
+  const addReminder = async ({ task, date, time, audioFile, recurrence }) => {
     try {
       const formData = new FormData();
       formData.append('task', task);
       formData.append('date', date);
       formData.append('time', time);
+      formData.append('recurrence', recurrence);
       formData.append('userId', user._id);
-      
-      // אם המשתמש העלה קובץ אודיו חדש, נשתמש בו ונעדכן את ה-state
-      if (newAudioFile) {
-        formData.append('audioFile', newAudioFile);
-        setAudioFile(newAudioFile.name); // עדכון ה-state עם שם הקובץ בלבד
-      } else if (audioFile) {
-        formData.append('audioFile', audioFile);
+
+      if (audioFile) {
+        if (audioFile instanceof Blob) {
+          formData.append('recordedTaskAudioFile', audioFile);
+        } else {
+          formData.append('audioFile', audioFile);
+        }
       }
-  
+
       const response = await axios.post(`http://localhost:5001/api/reminders/${user._id}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-  
       setReminders([...reminders, response.data]);
     } catch (err) {
       console.error('Error in adding reminder:', err.response?.data || err.message);
@@ -108,7 +98,7 @@ function MainApp() {
 
   const completeReminder = async (id) => {
     try {
-      const completionDate = new Date(); // שמירת השעה הנוכחית
+      const completionDate = new Date();
       await axios.put(`http://localhost:5001/api/reminders/${id}`, { isCompleted: true, completionDate });
       setReminders(prevReminders => 
         prevReminders.map(reminder => 
@@ -119,7 +109,12 @@ function MainApp() {
       console.error('Error completing reminder:', err);
     }
   };
-  
+
+  const handleAudioSettingsSave = ({ selectedAudio, customAudio }) => {
+    const audioToUse = customAudio ? URL.createObjectURL(customAudio) : selectedAudio;
+    setSelectedAudio(audioToUse);
+    localStorage.setItem('selectedAudio', audioToUse);
+  };
 
   const handleNavClick = (view) => {
     if (view === 'logout') {
@@ -128,7 +123,7 @@ function MainApp() {
     } else {
       setView(view);
       if (view === 'view' || view === 'status') {
-        fetchReminders(); // טען מחדש את התזכורות גם ב-"סטטוס"
+        fetchReminders();
       }
     }
   };
@@ -151,10 +146,10 @@ function MainApp() {
       ) : (
         <div>
           <NavBar onNavClick={handleNavClick} activeView={view} />
+          <AudioSettings onSave={handleAudioSettingsSave} />
           {view === 'add' && <AddReminder userId={user._id} onAdd={addReminder} />}
-          {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} fetchReminders={fetchReminders} />
-        }
-          {view === 'status' && <StatusView reminders={reminders} />} {/* הוספת תצוגת הסטטוס */}
+          {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} fetchReminders={fetchReminders} />}
+          {view === 'status' && <StatusView reminders={reminders} />}
           {view === 'completed' && <CompletedTasksView reminders={reminders} />}
         </div>
       )}

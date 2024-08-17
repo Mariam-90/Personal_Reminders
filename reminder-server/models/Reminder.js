@@ -5,10 +5,9 @@ const reminderSchema = new mongoose.Schema({
     executionDate: { type: Date, required: true },
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     isCompleted: { type: Boolean, default: false },
-    hasPlayedAudio: { type: Boolean, default: false },
-    hasSpokenText: { type: Boolean, default: false },
     recurrence: { type: String, enum: ['daily', 'weekly', 'monthly', 'none'], default: 'none' },
-    completionDate: { type: Date } // שדה חדש לשעת הביצוע
+    audioFileName: { type: String },  // Predefined or custom audio for the reminder notification
+    recordedTaskAudioFileName: { type: String }  // Recorded task audio file
 });
 
 const Reminder = mongoose.model('Reminder', reminderSchema);

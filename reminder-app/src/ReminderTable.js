@@ -2,13 +2,11 @@ import React from 'react';
 import axios from 'axios';
 
 function ReminderTable({ reminders, onComplete, fetchReminders }) {
-  
+
   const handleDelete = async (reminderId) => {
     try {
-      console.log('Deleting reminder:', reminderId);
       const response = await axios.delete(`http://localhost:5001/api/reminders/${reminderId}`);
-      console.log('Deleted reminder:', response.data);
-      fetchReminders(); // קורא לפונקציה לאחר המחיקה כדי לעדכן את הרשימה
+      fetchReminders();
     } catch (error) {
       console.error('Failed to delete reminder:', error.response ? error.response.data : error.message);
     }
@@ -23,6 +21,7 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
             <th>משימה</th>
             <th>תאריך</th>
             <th>שעה</th>
+            <th>הקלטה</th>
             <th>סטטוס</th>
             <th>מחיקה</th>
           </tr>
@@ -34,12 +33,25 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
                 <td>{reminder.task}</td>
                 <td>{new Date(reminder.executionDate).toLocaleDateString('he-IL')}</td>
                 <td>{new Date(reminder.executionDate).toLocaleTimeString('he-IL')}</td>
-                
-
                 <td>
-                  {reminder.isCompleted ? (
-                    'הושלמה'
+                  {reminder.recordedTaskAudioFileName ? (
+                    <audio controls>
+                      <source src={`http://localhost:5001/uploads/${reminder.recordedTaskAudioFileName}`} type="audio/wav" />
+                      הדפדפן שלך אינו תומך בהשמעת אודיו.
+                    </audio>
                   ) : (
+                    reminder.audioFileName ? (
+                      <audio controls>
+                        <source src={`http://localhost:5001/uploads/${reminder.audioFileName}`} type="audio/wav" />
+                        הדפדפן שלך אינו תומך בהשמעת אודיו.
+                      </audio>
+                    ) : (
+                      'אין הקלטה'
+                    )
+                  )}
+                </td>
+                <td>
+                  {reminder.isCompleted ? 'הושלמה' : (
                     <button onClick={() => onComplete(reminder._id)}>סמן כהושלמה</button>
                   )}
                 </td>
