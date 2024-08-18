@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import axios from 'axios';
 
-const AudioSettings = ({ onSave }) => {
+const AudioSettings = ({ username, onSave }) => {
   const [selectedAudio, setSelectedAudio] = useState('default.wav'); // Default audio selection
   const [customAudio, setCustomAudio] = useState(null);
 
@@ -14,15 +15,34 @@ const AudioSettings = ({ onSave }) => {
     console.log(`Uploaded custom audio file: ${event.target.files[0]?.name}`);
   };
 
-  const handleSave = () => {
-    console.log('Saving audio settings...');
-    console.log(`Selected audio: ${selectedAudio}`);
-    if (customAudio) {
-      console.log(`Custom audio file to use: ${customAudio.name}`);
-    } else {
-      console.log('No custom audio file selected.');
+  const handleSave = async () => {
+    try {
+      console.log('Saving audio settings...');
+      console.log(`Selected audio: ${selectedAudio}`);
+
+      const formData = new FormData();
+
+      if (customAudio) {
+        formData.append('audioFile', customAudio);
+      } else {
+        formData.append('selectedAudio', selectedAudio);
+      }
+
+      // Save audio setting to the server using the username
+      await axios.put(
+        `http://localhost:5001/api/users/updateAudioForUser/${username}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+
+      onSave({ selectedAudio, customAudio });
+    } catch (error) {
+      console.error('Error saving audio settings:', error);
     }
-    onSave({ selectedAudio, customAudio });
   };
 
   return (

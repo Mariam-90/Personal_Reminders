@@ -17,7 +17,7 @@ function MainApp() {
   });
   const [view, setView] = useState('add');
   const [selectedAudio, setSelectedAudio] = useState(() => {
-    return localStorage.getItem('selectedAudio') || 'default.wav';
+    return localStorage.getItem('selectedAudio') || 'reminder1.wav';
   });
 
   const fetchReminders = useCallback(async () => {
@@ -132,7 +132,14 @@ function MainApp() {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
   };
-
+  
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+  
   return (
     <div>
       {!user ? (

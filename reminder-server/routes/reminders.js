@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose'); // Ensure mongoose is imported
+const User = require('../models/User'); // Assuming User model is defined correctly
 const Reminder = require('../models/Reminder');
 const path = require('path');
 
@@ -21,7 +23,7 @@ module.exports = (upload) => {
         isCompleted: false,
         recurrence,
         audioFileName,
-        recordedTaskAudioFileName
+        recordedTaskAudioFileName,
       });
 
       await newReminder.save();
@@ -30,6 +32,9 @@ module.exports = (upload) => {
       res.status(400).json({ error: error.message });
     }
   });
+
+  // Update audio for a user
+  
 
   // Get reminders by user ID
   router.get('/:userId', async (req, res) => {
@@ -67,7 +72,7 @@ module.exports = (upload) => {
           userId: updatedReminder.userId,
           recurrence: updatedReminder.recurrence,
           audioFileName: updatedReminder.audioFileName,
-          recordedTaskAudioFileName: updatedReminder.recordedTaskAudioFileName
+          recordedTaskAudioFileName: updatedReminder.recordedTaskAudioFileName,
         });
 
         await newReminder.save();
