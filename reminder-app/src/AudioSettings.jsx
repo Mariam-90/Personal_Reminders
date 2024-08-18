@@ -19,8 +19,10 @@ const AudioSettings = ({ username, onSave }) => {
 
       if (customAudio) {
         formData.append('audioFile', customAudio);
+        formData.append('audioType', 'custom');
       } else {
         formData.append('selectedAudio', selectedAudio);
+        formData.append('audioType', 'predefined');
       }
 
       await axios.put(
@@ -51,12 +53,7 @@ const AudioSettings = ({ username, onSave }) => {
         <option value="reminder2.wav">Alert</option>
         <option value="reminder3.wav">Chime</option>
       </select>
-      <br />
-      <label>
-        או העלה קובץ אודיו מותאם אישית:
-        <input type="file" accept="audio/*" onChange={handleCustomAudioUpload} />
-      </label>
-      <br />
+      
       <button onClick={handleSave}>שמור בחירות</button>
     </div>
   );
