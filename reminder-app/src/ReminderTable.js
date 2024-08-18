@@ -1,14 +1,25 @@
 import React from 'react';
 import axios from 'axios';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faVolumeUp } from '@fortawesome/free-solid-svg-icons';
 
 function ReminderTable({ reminders, onComplete, fetchReminders }) {
 
   const handleDelete = async (reminderId) => {
     try {
-      const response = await axios.delete(`http://localhost:5001/api/reminders/${reminderId}`);
+      await axios.delete(`http://localhost:5001/api/reminders/${reminderId}`);
       fetchReminders();
     } catch (error) {
       console.error('Failed to delete reminder:', error.response ? error.response.data : error.message);
+    }
+  };
+
+  const readTaskText = (taskText) => {
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance(taskText);
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.error('Speech synthesis not supported');
     }
   };
 
@@ -24,13 +35,23 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
             <th>הקלטה</th>
             <th>סטטוס</th>
             <th>מחיקה</th>
+            <th>הקרא טקסט</th>
           </tr>
         </thead>
         <tbody>
           {reminders.length > 0 ? (
             reminders.map((reminder) => (
               <tr key={reminder._id}>
-                <td>{reminder.task}</td>
+                <td>
+                  {reminder.task}
+                  <button
+                    onClick={() => readTaskText(reminder.task)}
+                    aria-label="הקרא טקסט"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '8px' }}
+                  >
+                    <FontAwesomeIcon icon={faVolumeUp} />
+                  </button>
+                </td>
                 <td>{new Date(reminder.executionDate).toLocaleDateString('he-IL')}</td>
                 <td>{new Date(reminder.executionDate).toLocaleTimeString('he-IL')}</td>
                 <td>
@@ -62,7 +83,7 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
             ))
           ) : (
             <tr>
-              <td colSpan="6">אין תזכורות להצגה</td>
+              <td colSpan="7">אין תזכורות להצגה</td>
             </tr>
           )}
         </tbody>

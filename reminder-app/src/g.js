@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import Register from './Register';
 import Login from './Login';
@@ -8,7 +8,6 @@ import ReminderTable from './ReminderTable';
 import StatusView from './StatusView';
 import CompletedTasksView from './CompletedTasksView';
 import AudioSettings from './AudioSettings';
-import AudioPlayer from './AudioPlayer';
 
 function MainApp() {
   const [reminders, setReminders] = useState([]);
@@ -21,17 +20,13 @@ function MainApp() {
     return localStorage.getItem('selectedAudio') || 'reminder1.wav';
   });
 
-  const alertAudioRef = useRef(null);
-  const reminderAudioRef = useRef(null);
-
   const fetchReminders = useCallback(async () => {
     if (user) {
       try {
-        console.log(`Fetching reminders for user: ${user.username}`);
         const response = await axios.get(`http://localhost:5001/api/reminders/${user._id}`);
         setReminders(response.data);
       } catch (err) {
-        console.error('Failed to fetch reminders:', err);
+        console.error(err);
       }
     }
   }, [user]);
@@ -40,25 +35,22 @@ function MainApp() {
     fetchReminders();
   }, [fetchReminders]);
 
-  const triggerAudioPlayer = (audioRef, audioFileName, isPredefined = false) => {
-    if (audioRef.current) {
-      audioRef.current.playAudio(audioFileName, isPredefined);
-    }
+  const playAudio = (audioFileName) => {
+    const audioPath = `http://localhost:5001/uploads/${audioFileName || selectedAudio}`;
+    const audio = new Audio(audioPath);
+    audio.play().catch(error => {
+      console.error('Audio play failed:', error);
+    });
   };
 
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      console.log('Current time:', now);
-
       reminders.forEach(reminder => {
         const reminderDate = new Date(reminder.executionDate);
         const alertDate = new Date(reminderDate.getTime() - 30 * 60 * 1000);
-        console.log('Checking reminder:', reminder);
-
-        if (now >= alertDate && now < reminderDate && !reminder.isAlerted) {
-          console.log('Triggering alert audio for:', reminder);
-          triggerAudioPlayer(alertAudioRef, selectedAudio, true);
+        if (now >= alertDate && now < reminderDate && !reminder.isCompleted && !reminder.isAlerted) {
+          playAudio(reminder.recordedTaskAudioFileName || reminder.audioFileName);
           axios.put(`http://localhost:5001/api/reminders/${reminder._id}`, { isAlerted: true })
             .then(() => {
               setReminders(prevReminders =>
@@ -71,25 +63,8 @@ function MainApp() {
               console.error('Failed to update reminder:', error);
             });
         }
-
-        if (now >= reminderDate && !reminder.isCompleted) {
-          console.log('Triggering reminder audio for:', reminder);
-          triggerAudioPlayer(reminderAudioRef, reminder.recordedTaskAudioFileName || reminder.audioFileName, false);
-          axios.put(`http://localhost:5001/api/reminders/${reminder._id}`, { isCompleted: true })
-            .then(() => {
-              setReminders(prevReminders =>
-                prevReminders.map(r =>
-                  r._id === reminder._id ? { ...r, isCompleted: true } : r
-                )
-              );
-            })
-            .catch(error => {
-              console.error('Failed to update reminder:', error);
-            });
-        }
       });
     }, 60000);
-
     return () => clearInterval(interval);
   }, [reminders, selectedAudio]);
 
@@ -139,7 +114,6 @@ function MainApp() {
     const audioToUse = customAudio ? URL.createObjectURL(customAudio) : selectedAudio;
     setSelectedAudio(audioToUse);
     localStorage.setItem('selectedAudio', audioToUse);
-    alert('הבחירה נשמרה בהצלחה!');
   };
 
   const handleNavClick = (view) => {
@@ -158,7 +132,14 @@ function MainApp() {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
   };
-
+  
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
+  
   return (
     <div>
       {!user ? (
@@ -173,13 +154,11 @@ function MainApp() {
         <div>
           <NavBar onNavClick={handleNavClick} activeView={view} />
           <AudioSettings username={user.username} onSave={handleAudioSettingsSave} />
+
           {view === 'add' && <AddReminder userId={user._id} onAdd={addReminder} />}
           {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} fetchReminders={fetchReminders} />}
           {view === 'status' && <StatusView reminders={reminders} />}
           {view === 'completed' && <CompletedTasksView reminders={reminders} />}
-
-          <AudioPlayer ref={alertAudioRef} username={user.username} />
-          <AudioPlayer ref={reminderAudioRef} username={user.username} />
         </div>
       )}
     </div>

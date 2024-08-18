@@ -2,24 +2,19 @@ import React, { useState } from 'react';
 import axios from 'axios';
 
 const AudioSettings = ({ username, onSave }) => {
-  const [selectedAudio, setSelectedAudio] = useState('default.wav'); // Default audio selection
+  const [selectedAudio, setSelectedAudio] = useState('reminder.wav'); 
   const [customAudio, setCustomAudio] = useState(null);
 
   const handleAudioChange = (event) => {
     setSelectedAudio(event.target.value);
-    console.log(`Selected predefined audio: ${event.target.value}`);
   };
 
   const handleCustomAudioUpload = (event) => {
     setCustomAudio(event.target.files[0]);
-    console.log(`Uploaded custom audio file: ${event.target.files[0]?.name}`);
   };
 
   const handleSave = async () => {
     try {
-      console.log('Saving audio settings...');
-      console.log(`Selected audio: ${selectedAudio}`);
-
       const formData = new FormData();
 
       if (customAudio) {
@@ -28,7 +23,6 @@ const AudioSettings = ({ username, onSave }) => {
         formData.append('selectedAudio', selectedAudio);
       }
 
-      // Save audio setting to the server using the username
       await axios.put(
         `http://localhost:5001/api/users/updateAudioForUser/${username}`,
         formData,
@@ -40,8 +34,11 @@ const AudioSettings = ({ username, onSave }) => {
       );
 
       onSave({ selectedAudio, customAudio });
+
+      alert('הבחירה נשמרה בהצלחה!');
     } catch (error) {
       console.error('Error saving audio settings:', error);
+      alert('אירעה שגיאה בשמירת העדפות האודיו.');
     }
   };
 
@@ -53,7 +50,6 @@ const AudioSettings = ({ username, onSave }) => {
         <option value="reminder1.wav">Beep</option>
         <option value="reminder2.wav">Alert</option>
         <option value="reminder3.wav">Chime</option>
-        {/* Add more predefined audio files here */}
       </select>
       <br />
       <label>

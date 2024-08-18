@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const multer = require('multer');
 const User = require('../models/User');
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // Register route
 router.post('/register', async (req, res) => {
@@ -20,7 +24,6 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    console.log('Received data:', username, password); // Log received data for debugging
     const user = await User.findOne({ username });
     if (user && await bcrypt.compare(password, user.password)) {
       res.status(200).json(user);
@@ -37,31 +40,57 @@ router.put('/updateAudioForUser/:username', upload.single('audioFile'), async (r
     let updateData = {};
 
     if (req.file) {
+      // אם המשתמש העלה קובץ אודיו
       updateData = {
         audioContentType: req.file.mimetype,
-        audioData: req.file.buffer, // Store the audio binary data
+        audioData: req.file.buffer, // שמירת הקובץ בפורמט בינארי
       };
-      console.log('Custom audio file uploaded for user:', username);
+      console.log(`Audio file uploaded for user ${username}:`, req.file.originalname);
     } else if (req.body.selectedAudio) {
+      // אם המשתמש בחר קובץ מוגדר מראש
       updateData = {
-        audioContentType: 'audio/wav', // Assuming the predefined files are WAV
-        audioData: null,
+        audioContentType: 'predefined', // סוג הצליל יהיה "predefined"
+        audioData: req.body.selectedAudio, // שמירת שם הקובץ כטקסט ולא כנתונים בינאריים
       };
-      console.log('Selected predefined audio for user:', username);
+      console.log(`Predefined audio selected for user ${username}:`, req.body.selectedAudio);
     }
+
+    console.log(`Updating user ${username} with data:`, updateData);
 
     const updatedUser = await User.findOneAndUpdate({ username }, updateData, { new: true });
 
     if (!updatedUser) {
-      console.error('User not found:', username);
       return res.status(404).send('User not found');
     }
 
-    console.log('User audio settings updated successfully:', username);
     res.status(200).json({ message: 'User audio settings updated successfully' });
   } catch (error) {
-    console.error('Error updating audio settings:', error.message);
+    console.error('Error updating audio settings:', error);
     res.status(400).json({ error: error.message });
+  }
+});
+
+
+
+// בשרת users.js
+router.get('/:username/audio', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    if (!user.audioData || !user.audioContentType) {
+      return res.status(404).send('Audio not found');
+    }
+
+    res.set('Content-Type', user.audioContentType);
+    res.send(user.audioData);
+  } catch (error) {
+    console.error('Error fetching audio data:', error);
+    res.status(500).json({ error: 'Error fetching audio data' });
   }
 });
 
