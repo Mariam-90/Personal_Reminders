@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faVolumeUp } from '@fortawesome/free-solid-svg-icons';
+import { faVolumeUp, faEdit } from '@fortawesome/free-solid-svg-icons';
 
 function ReminderTable({ reminders, onComplete, fetchReminders }) {
+  const [editingReminder, setEditingReminder] = useState(null);
+  const [updatedTask, setUpdatedTask] = useState('');
+  const [updatedDate, setUpdatedDate] = useState('');
+  const [updatedTime, setUpdatedTime] = useState('');
 
   const handleDelete = async (reminderId) => {
     try {
@@ -23,6 +27,27 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
     }
   };
 
+  const startEditing = (reminder) => {
+    setEditingReminder(reminder._id);
+    setUpdatedTask(reminder.task);
+    setUpdatedDate(reminder.executionDate.split('T')[0]);
+    setUpdatedTime(reminder.executionDate.split('T')[1].slice(0, 5));
+  };
+
+  const saveUpdates = async (id) => {
+    try {
+      await axios.put(`http://localhost:5001/api/reminders/${id}`, {
+        task: updatedTask,
+        date: updatedDate,
+        time: updatedTime,
+      });
+      setEditingReminder(null);
+      fetchReminders();
+    } catch (error) {
+      console.error('Failed to update reminder:', error.response ? error.response.data : error.message);
+    }
+  };
+
   // סינון התזכורות להראות רק את אלו שעדיין לא הושלמו
   const incompleteReminders = reminders.filter(reminder => !reminder.isCompleted);
 
@@ -37,6 +62,7 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
             <th>שעה</th>
             <th>הקלטה</th>
             <th>סטטוס</th>
+            <th>עדכון</th>
             <th>מחיקה</th>
             <th>הקרא טקסט</th>
           </tr>
@@ -46,17 +72,38 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
             incompleteReminders.map((reminder) => (
               <tr key={reminder._id}>
                 <td>
-                  {reminder.task}
-                  <button
-                    onClick={() => readTaskText(reminder.task)}
-                    aria-label="הקרא טקסט"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', marginLeft: '8px' }}
-                  >
-                    <FontAwesomeIcon icon={faVolumeUp} />
-                  </button>
+                  {editingReminder === reminder._id ? (
+                    <input
+                      type="text"
+                      value={updatedTask}
+                      onChange={(e) => setUpdatedTask(e.target.value)}
+                    />
+                  ) : (
+                    <span>{reminder.task}</span>
+                  )}
                 </td>
-                <td>{new Date(reminder.executionDate).toLocaleDateString('he-IL')}</td>
-                <td>{new Date(reminder.executionDate).toLocaleTimeString('he-IL')}</td>
+                <td>
+                  {editingReminder === reminder._id ? (
+                    <input
+                      type="date"
+                      value={updatedDate}
+                      onChange={(e) => setUpdatedDate(e.target.value)}
+                    />
+                  ) : (
+                    new Date(reminder.executionDate).toLocaleDateString('he-IL')
+                  )}
+                </td>
+                <td>
+                  {editingReminder === reminder._id ? (
+                    <input
+                      type="time"
+                      value={updatedTime}
+                      onChange={(e) => setUpdatedTime(e.target.value)}
+                    />
+                  ) : (
+                    new Date(reminder.executionDate).toLocaleTimeString('he-IL')
+                  )}
+                </td>
                 <td>
                   {reminder.recordedTaskAudioFileName ? (
                     <audio controls>
@@ -80,13 +127,29 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
                   )}
                 </td>
                 <td>
+                  {editingReminder === reminder._id ? (
+                    <button onClick={() => saveUpdates(reminder._id)}>שמור</button>
+                  ) : (
+                    <button onClick={() => startEditing(reminder)}>עדכן</button>
+                  )}
+                </td>
+                <td>
                   <button onClick={() => handleDelete(reminder._id)}>מחק</button>
+                </td>
+                <td>
+                  <button
+                    onClick={() => readTaskText(reminder.task)}
+                    aria-label="הקרא טקסט"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    <FontAwesomeIcon icon={faVolumeUp} />
+                  </button>
                 </td>
               </tr>
             ))
           ) : (
             <tr>
-              <td colSpan="7">אין תזכורות להצגה</td>
+              <td colSpan="8">אין תזכורות להצגה</td>
             </tr>
           )}
         </tbody>
