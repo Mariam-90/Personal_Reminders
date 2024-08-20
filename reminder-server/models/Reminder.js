@@ -8,7 +8,8 @@ const ReminderSchema = new mongoose.Schema({
   recurrence: { type: String, enum: ['none', 'daily', 'weekly', 'monthly'], default: 'none' },
   audioFileName: { type: String, default: 'reminder.wav' },
   recordedTaskAudioFileName: { type: String, default: null },
-  hasNewReminder: { type: Boolean, default: false }  // New field to track new reminder creation
+  hasNewReminder: { type: Boolean, default: false },
+  completionDate: { type: Date }  
 });
 
 module.exports = mongoose.model('Reminder', ReminderSchema);

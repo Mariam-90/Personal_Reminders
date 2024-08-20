@@ -6,8 +6,7 @@ const Reminder = require('../models/Reminder');
 const path = require('path');
 
 module.exports = (upload) => {
-  // Add new reminder
-  // Add new reminder
+
 // Add new reminder
 router.post('/:userId', upload.fields([{ name: 'audioFile' }, { name: 'recordedTaskAudioFile' }]), async (req, res) => {
   try {

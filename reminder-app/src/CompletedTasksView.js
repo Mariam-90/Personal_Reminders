@@ -13,7 +13,7 @@ function CompletedTasksView({ reminders }) {
             <th>משימה</th>
             <th>תאריך</th>
             <th>שעה</th>
-            <th>שעת ביצוע</th> {/* הוספת עמודה לשעת הביצוע */}
+            <th>שעת ביצוע</th> {/* עמודה לשעת ביצוע */}
           </tr>
         </thead>
         <tbody>
@@ -23,7 +23,7 @@ function CompletedTasksView({ reminders }) {
                 <td>{reminder.task}</td>
                 <td>{new Date(reminder.executionDate).toLocaleDateString('he-IL')}</td>
                 <td>{new Date(reminder.executionDate).toLocaleTimeString('he-IL')}</td>
-                <td>{reminder.completionDate ? new Date(reminder.completionDate).toLocaleTimeString('he-IL') : 'לא זמין'}</td> {/* בדיקה אם completionDate קיים */}
+                <td>{reminder.completionDate ? new Date(reminder.completionDate).toLocaleTimeString('he-IL') : 'לא זמין'}</td>
               </tr>
             ))
           ) : (

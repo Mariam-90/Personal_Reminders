@@ -44,13 +44,7 @@ function MainApp() {
     fetchReminders();
   }, [fetchReminders]);
 
-  // Trigger audio playback
-  const triggerAudioPlayer = (audioRef, audioFileName, isPredefined = false) => {
-    if (audioRef.current && !playedReminders.has(audioFileName)) {
-      audioRef.current.playAudio(audioFileName, isPredefined);
-      setPlayedReminders(prev => new Set(prev.add(audioFileName)));
-    }
-  };
+
   
   
 
@@ -63,7 +57,10 @@ function MainApp() {
         const reminderDate = new Date(reminder.executionDate);
         const alertDate = new Date(reminderDate.getTime() - 30 * 60 * 1000);
   
-        if (now >= alertDate && now < reminderDate && !reminder.isAlerted) {
+        if (now >= alertDate && now < reminderDate && !reminder.isCompleted &&!reminder.isAlerted) {
+          console.log('alerting user', alertDate);
+          console.log('reminderDate user', reminderDate);
+          console.log('!reminder.isAlerted', !reminder.isAlerted);
           triggerAudioPlayer(alertAudioRef, selectedAudio, true);
   
           axios.put(`http://localhost:5001/api/reminders/${reminder._id}`, { 
@@ -71,16 +68,16 @@ function MainApp() {
             recurrence: reminder.recurrence, 
             audioPlayed: true 
           })
-            .then(() => {
-              setReminders(prevReminders =>
-                prevReminders.map(r =>
-                  r._id === reminder._id ? { ...r, isAlerted: true } : r
-                )
-              );
-            })
-            .catch(error => {
-              console.error('Failed to update reminder:', error);
-            });
+          .then(() => {
+            setReminders(prevReminders =>
+              prevReminders.map(r =>
+                r._id === reminder._id ? { ...r, isAlerted: true } : r
+              )
+            );
+          })
+          .catch(error => {
+            console.error('Failed to update reminder:', error);
+          });
         }
   
         if (reminder.isAlerted && reminder.recurrence && !reminder.hasNewReminder) {
@@ -107,16 +104,16 @@ function MainApp() {
             audioFileName: reminder.audioFileName,
             recordedTaskAudioFileName: reminder.recordedTaskAudioFileName
           })
-            .then(response => {
-              setReminders(prevReminders =>
-                prevReminders.map(r =>
-                  r._id === reminder._id ? { ...r, hasNewReminder: true } : r
-                ).concat(response.data)
-              );
-            })
-            .catch(error => {
-              console.error('Failed to create new reminder:', error);
-            });
+          .then(response => {
+            setReminders(prevReminders =>
+              prevReminders.map(r =>
+                r._id === reminder._id ? { ...r, hasNewReminder: true } : r
+              ).concat(response.data)
+            );
+          })
+          .catch(error => {
+            console.error('Failed to create new reminder:', error);
+          });
         }
       });
     }, 60000); // Check every minute
@@ -124,7 +121,14 @@ function MainApp() {
     return () => clearInterval(interval);
   }, [reminders, selectedAudio, playedReminders]);
   
-  // Add a new reminder
+  // Trigger audio playback
+  const triggerAudioPlayer = (audioRef, audioFileName, isPredefined = false) => {
+    if (audioRef.current && !playedReminders.has(audioFileName)) {
+      audioRef.current.playAudio(audioFileName, isPredefined);
+      setPlayedReminders(prev => new Set(prev.add(audioFileName)));
+    }
+  };
+  
 
   const addReminder = async ({ task, date, time, audioFile, recurrence }) => {
     try {
@@ -165,9 +169,11 @@ function MainApp() {
 
 
   // Mark a reminder as completed
+  
+      
   const completeReminder = async (id) => {
     try {
-      const completionDate = new Date();
+      const completionDate = new Date(); // יצירת תאריך ושעה נוכחיים
       await axios.put(`http://localhost:5001/api/reminders/${id}`, { isCompleted: true, completionDate });
       setReminders(prevReminders => 
         prevReminders.map(reminder => 
@@ -175,9 +181,10 @@ function MainApp() {
         )
       );
     } catch (err) {
-      console.error('Error completing reminder:', err);
+      console.error('Error completing reminder:', err.response?.data || err.message);
     }
   };
+  
 
   // Handle audio settings save
   const handleAudioSettingsSave = ({ selectedAudio, customAudio }) => {
