@@ -80,7 +80,7 @@ function MainApp() {
           });
         }
   
-        if (reminder.isAlerted && reminder.recurrence && !reminder.hasNewReminder) {
+        if (reminder.isAlerted && reminder.recurrence && reminder.recurrence !== 'none' && !reminder.hasNewReminder) {
           let nextExecutionDate;
           switch (reminder.recurrence) {
             case 'daily':
