@@ -23,6 +23,9 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
     }
   };
 
+  // סינון התזכורות להראות רק את אלו שעדיין לא הושלמו
+  const incompleteReminders = reminders.filter(reminder => !reminder.isCompleted);
+
   return (
     <div className="reminder-table-container">
       <h2>התזכורות שלי</h2>
@@ -39,8 +42,8 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
           </tr>
         </thead>
         <tbody>
-          {reminders.length > 0 ? (
-            reminders.map((reminder) => (
+          {incompleteReminders.length > 0 ? (
+            incompleteReminders.map((reminder) => (
               <tr key={reminder._id}>
                 <td>
                   {reminder.task}

@@ -38,7 +38,14 @@ function AddReminder({ onAdd, selectedAudio }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     const selectedAudioFile = recordedAudio || selectedAudio;
-    onAdd({ task, date, time, audioFile: selectedAudioFile, recurrence });
+    onAdd({ 
+      task, 
+      date, 
+      time, 
+      audioFile: selectedAudioFile, 
+      recurrence,
+      hasNewReminder: false  // Adding the hasNewReminder field
+    });
     setTask('');
     setDate('');
     setTime('');

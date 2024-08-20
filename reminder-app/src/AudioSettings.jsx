@@ -52,6 +52,9 @@ const AudioSettings = ({ username, onSave }) => {
         <option value="reminder1.wav">Beep</option>
         <option value="reminder2.wav">Alert</option>
         <option value="reminder3.wav">Chime</option>
+        <option value="blobbell.wav">Chime</option>
+        <option value="blobre3.wav">Chime</option>
+        
       </select>
       
       <button onClick={handleSave}>שמור בחירות</button>
