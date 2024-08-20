@@ -36,7 +36,8 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
 
   const saveUpdates = async (id) => {
     try {
-      await axios.put(`http://localhost:5001/api/reminders/${id}`, {
+      console.log("Saving updates:", { id, updatedTask, updatedDate, updatedTime });
+      await axios.put(`http://localhost:5001/api/reminders/update-details/${id}`, {
         task: updatedTask,
         date: updatedDate,
         time: updatedTime,
@@ -47,6 +48,9 @@ function ReminderTable({ reminders, onComplete, fetchReminders }) {
       console.error('Failed to update reminder:', error.response ? error.response.data : error.message);
     }
   };
+  
+  
+  
 
   // סינון התזכורות להראות רק את אלו שעדיין לא הושלמו
   const incompleteReminders = reminders.filter(reminder => !reminder.isCompleted);

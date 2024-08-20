@@ -44,7 +44,7 @@ router.post('/:userId', upload.fields([{ name: 'audioFile' }, { name: 'recordedT
       res.status(400).json({ error: error.message });
     }
   });
-
+  
   // Update reminder by ID
 router.put('/:id', async (req, res) => {
   try {
@@ -116,6 +116,29 @@ router.put('/:id', async (req, res) => {
       }
       res.status(200).json({ message: 'Reminder deleted', deletedReminder });
     } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+  router.put('/update-details/:id', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { task, date, time } = req.body;
+  
+      const executionDate = new Date(`${date}T${time}:00`);
+  
+      const updatedReminder = await Reminder.findByIdAndUpdate(
+        id,
+        { task, executionDate },
+        { new: true }
+      );
+  
+      if (!updatedReminder) {
+        return res.status(404).json({ error: 'Reminder not found' });
+      }
+  
+      res.status(200).json(updatedReminder);
+    } catch (error) {
+      console.error('Error in updating reminder:', error);
       res.status(400).json({ error: error.message });
     }
   });
