@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './FormStyles.css'; // ייבוא ה-CSS המשותף
 
 const Login = ({ setUser, toggleView }) => {
   const [username, setUsername] = useState('');
@@ -17,7 +18,7 @@ const Login = ({ setUser, toggleView }) => {
   };
 
   return (
-    <div>
+    <div className="form-container">
       <h2>Login</h2>
       {error && <p>{error}</p>}
       <form onSubmit={handleLogin}>

@@ -1,0 +1,198 @@
+/* כללי */
+body, html {
+  margin: 0;
+  padding: 0;
+  font-family: 'Arial', sans-serif;
+  background-color: #11041b;
+  color: white;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* עיצוב האפליקציה */
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+/* עיצוב הכותרת */
+h2 {
+  color: #ffa500;
+  font-size: 2em;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* ניווט */
+nav.navbar {
+  background-color: #1e1e1e;
+  width: 100%;
+  padding: 15px 0;
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+nav.navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-around;
+  width: 60%;
+}
+
+nav.navbar ul li {
+  color: white;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 18px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+nav.navbar ul li:hover {
+  background-color: #575757;
+  border-radius: 5px;
+  transform: scale(1.05);
+}
+
+nav.navbar ul li.active {
+  background-color: #ffa500;
+  color: black;
+  border-radius: 5px;
+}
+
+/* עיצוב טפסים */
+form {
+  margin: 20px auto;
+  display: flex;
+  flex-direction: column;
+  background: #1e1e1e;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  max-width: 300px;
+  width: 100%;
+}
+
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: #b3b3b3;
+}
+
+input[type="text"], input[type="date"], input[type="time"], input[type="password"], input[type="email"] {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #333;
+  border-radius: 5px;
+  background-color: #333;
+  color: white;
+}
+
+button {
+  background-color: #ffa500;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: #e69500;
+}
+
+/* עיצוב טבלאות */
+.reminder-table-container {
+  margin: 20px auto;
+  width: 100%;
+  max-width: 800px;
+  color: white;
+}
+
+.reminder-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #1e1e1e;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.reminder-table th, .reminder-table td {
+  padding: 12px;
+  border: 1px solid #333;
+}
+
+.reminder-table th {
+  background-color: #333;
+  color: #ffa500;
+  text-align: left;
+}
+
+.reminder-table td {
+  color: #b3b3b3;
+}
+
+.reminder-table tr:nth-child(even) {
+  background-color: #2a2a2a;
+}
+
+.reminder-table button {
+  background-color: #ffa500;
+  color: white;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.reminder-table button:hover {
+  background-color: #e69500;
+}
+
+/* קישורים */
+a {
+  color: #ffa500;
+  text-decoration: none;
+  margin-top: 20px;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* עיצוב נוסף */
+p {
+  color: red;
+}
+
+.reminder-container {
+  display: none;
+}
+
+.reminder-container.show {
+  display: block;
+}

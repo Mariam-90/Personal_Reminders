@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './FormStyles.css'; // ייבוא ה-CSS המשותף
 
 const Register = ({ setUser, toggleView }) => {
   const [username, setUsername] = useState('');
@@ -17,12 +18,12 @@ const Register = ({ setUser, toggleView }) => {
   };
 
   return (
-    <div>
+    <div className="form-container">
       <h2>Register</h2>
       {error && <p>{error}</p>}
       <form onSubmit={handleRegister}>
         <label>
-          Username:
+          Username: 
           <input
             type="text"
             value={username}
@@ -30,7 +31,7 @@ const Register = ({ setUser, toggleView }) => {
           />
         </label>
         <label>
-          Password:
+          Password: 
           <input
             type="password"
             value={password}

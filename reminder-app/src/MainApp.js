@@ -9,7 +9,7 @@ import StatusView from './StatusView';
 import CompletedTasksView from './CompletedTasksView';
 import AudioSettings from './AudioSettings';
 import AudioPlayer from './AudioPlayer';
-
+import './MainApp.css';
 function MainApp() {
   const [reminders, setReminders] = useState([]);
   const [user, setUser] = useState(() => {
@@ -163,8 +163,6 @@ function MainApp() {
     }
   };
   
-
-   
 
 
 

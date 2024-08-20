@@ -1,35 +1,15 @@
-.App {
-  text-align: center;
-  font-family: 'Arial', sans-serif;
-  background-color: #11041b;
-  color: white;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start; /* שינוי כדי להתחיל מהניווט למעלה */
-  align-items: center;
-}
-
-.App-header {
-  background-color: #11041b;
-  min-height: 10vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
+/* ניווט */
 nav.navbar {
-  background-color: #1e1e1e; /* צבע כהה יותר */
+  background-color: #1e1e1e;
   width: 100%;
   padding: 15px 0;
   display: flex;
   justify-content: center;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-  position: sticky;
+  position: fixed; /* מיקום קבוע בחלק העליון */
   top: 0;
-  z-index: 1000; /* שמירה על מיקום הניווט גם בגלילה */
+  left: 0;
+  z-index: 1000;
 }
 
 nav.navbar ul {
@@ -38,7 +18,8 @@ nav.navbar ul {
   padding: 0;
   display: flex;
   justify-content: space-around;
-  width: 60%; /* מקטין את הרוחב לשמירה על אסתטיקה */
+  width: 100%;
+  max-width: 800px; /* רוחב מקסימלי ליישור אסתטי */
 }
 
 nav.navbar ul li {
@@ -61,147 +42,7 @@ nav.navbar ul li.active {
   border-radius: 5px;
 }
 
-
-form {
-  margin: 20px auto;
-  display: flex;
-  flex-direction: column;
-  background: #1e1e1e;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  max-width: 400px;
-  width: 100%;
-}
-
-label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
-  color: #b3b3b3;
-}
-
-input[type="text"], input[type="date"], input[type="time"], input[type="password"], input[type="email"] {
-  width: calc(100% - 20px);
-  padding: 10px;
-  margin-bottom: 20px;
-  border: 1px solid #333;
-  border-radius: 5px;
-  background-color: #333;
-  color: white;
-}
-
-button {
-  background-color: #ffa500;
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  font-size: 16px;
-}
-
-button:hover {
-  background-color: #e69500;
-}
-
-ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-li {
-  background: #333;
-  margin: 5px 0;
-  padding: 10px;
-  border-radius: 4px;
-  display: flex;
-  justify-content: space-between;
-}
-
-.reminder-item {
-  display: flex;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.reminder-date, .reminder-time {
-  margin-left: 10px;
-  color: #888;
-}
-
-.reminder-container {
-  display: none;
-}
-
-.reminder-container.show {
-  display: block;
-}
-
-h2 {
-  color: white;
-  font-size: 1.5em;
-  margin-bottom: 20px;
-}
-
-p {
-  color: red;
-}
-
-a {
-  color: #ffa500;
-  text-decoration: none;
-  margin-top: 20px;
-}
-
-a:hover {
-  text-decoration: underline;
-}
-.reminder-table-container {
-  margin: 20px auto;
-  width: 80%;
-  max-width: 800px;
-  text-align: left;
-  color: white;
-}
-
-.reminder-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: #1e1e1e;
-  border-radius: 10px;
-  overflow: hidden;
-}
-
-.reminder-table th, .reminder-table td {
-  padding: 12px;
-  border: 1px solid #333;
-}
-
-.reminder-table th {
-  background-color: #333;
-  color: #ffa500;
-  text-align: left;
-}
-
-.reminder-table td {
-  color: #b3b3b3;
-}
-
-.reminder-table tr:nth-child(even) {
-  background-color: #2a2a2a;
-}
-.reminder-table button {
-  background-color: #ffa500;
-  color: white;
-  padding: 5px 10px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-.reminder-table button:hover {
-  background-color: #e69500;
+/* התאמה לגוף הדף בעקבות הניווט הקבוע */
+body {
+  padding-top: 60px; /* משאיר מקום לניווט הקבוע */
 }
