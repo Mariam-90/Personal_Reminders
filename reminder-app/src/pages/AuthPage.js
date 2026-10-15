@@ -48,10 +48,10 @@ export default function AuthPage() {
       </div>
       <div className="auth-card">
         <div className="auth-hero">
-          <div className="brand-logo" aria-hidden="true">🔔</div>
-          <h1>
-            <span className="grad-text">{t('app.name')}</span>
-          </h1>
+          <div className="auth-brand">
+            <div className="brand-logo" aria-hidden="true">🔔</div>
+            <h1>{t('app.name')}</h1>
+          </div>
           <p>{t('app.tagline')}</p>
         </div>
 
