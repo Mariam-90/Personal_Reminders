@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+test('shows the Hebrew login screen when signed out', () => {
+  localStorage.clear();
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'התזכורות שלי' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'כניסה' })).toBeInTheDocument();
 });
