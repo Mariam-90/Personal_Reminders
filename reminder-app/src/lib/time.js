@@ -1,3 +1,5 @@
+import { getLanguage, getLocale, t } from '../i18n';
+
 // All dates are handled in the user's local time zone. The API stores ISO (UTC) instants.
 
 const MINUTE = 60 * 1000;
@@ -25,10 +27,15 @@ export function fromInputs(dateStr, timeStr) {
 }
 
 export const formatTime = (date) =>
-  new Date(date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
+  new Date(date).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit', hour12: false });
 
 export const formatDate = (date) =>
-  new Date(date).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' });
+  new Date(date).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long' });
+
+const relativeFormat = (numeric) => new Intl.RelativeTimeFormat(getLocale(), { numeric });
+
+// English labels like "today" read better capitalised when they stand alone.
+const capitalise = (text) => (getLanguage().code === 'en' ? text.charAt(0).toUpperCase() + text.slice(1) : text);
 
 export const startOfDay = (date) => {
   const d = new Date(date);
@@ -45,41 +52,30 @@ export const addDays = (date, days) => {
 export const isSameDay = (a, b) => startOfDay(a).getTime() === startOfDay(b).getTime();
 
 export function dayLabel(date, now = new Date()) {
-  if (isSameDay(date, now)) return 'היום';
-  if (isSameDay(date, addDays(now, 1))) return 'מחר';
-  if (isSameDay(date, addDays(now, -1))) return 'אתמול';
+  const days = Math.round((startOfDay(date) - startOfDay(now)) / (24 * 60 * MINUTE));
+  if (Math.abs(days) <= 1) return capitalise(relativeFormat('auto').format(days, 'day'));
   return formatDate(date);
 }
 
-// "בעוד 20 דקות" / "לפני שעה"
+// "in 20 minutes" / "לפני שעה" / "خلال ساعتين", via Intl so plurals are right in every language.
 export function relativeTime(date, now = new Date()) {
   const diff = new Date(date).getTime() - now.getTime();
-  const mins = Math.round(Math.abs(diff) / MINUTE);
-  let text;
-  if (mins < 1) return 'עכשיו';
-  if (mins === 1) text = 'דקה';
-  else if (mins < 60) text = `${mins} דקות`;
-  else {
-    const hours = Math.floor(mins / 60);
-    const rest = mins % 60;
-    if (hours >= 24) {
-      const days = Math.round(hours / 24);
-      text = days === 1 ? 'יום' : `${days} ימים`;
-    } else {
-      text = hours === 1 ? 'שעה' : hours === 2 ? 'שעתיים' : `${hours} שעות`;
-      if (rest >= 5 && hours < 3) text += ` ו-${rest} דק׳`;
-    }
-  }
-  return diff > 0 ? `בעוד ${text}` : `לפני ${text}`;
+  const mins = Math.round(diff / MINUTE);
+  const rtf = relativeFormat('auto');
+  if (Math.abs(mins) < 1) return rtf.format(0, 'second');
+  if (Math.abs(mins) < 60) return rtf.format(mins, 'minute');
+  const hours = Math.round(mins / 60);
+  if (Math.abs(hours) < 24) return rtf.format(hours, 'hour');
+  return rtf.format(Math.round(hours / 24), 'day');
 }
 
 export function greeting(now = new Date()) {
   const h = now.getHours();
-  if (h < 5) return 'לילה טוב';
-  if (h < 12) return 'בוקר טוב';
-  if (h < 17) return 'צהריים טובים';
-  if (h < 21) return 'ערב טוב';
-  return 'לילה טוב';
+  if (h < 5) return t('greeting.night');
+  if (h < 12) return t('greeting.morning');
+  if (h < 17) return t('greeting.afternoon');
+  if (h < 21) return t('greeting.evening');
+  return t('greeting.night');
 }
 
 // When the reminder should actually ring (after a snooze, if any).

@@ -1,12 +1,14 @@
 import api from './api';
+import { getLanguage } from '../i18n';
 
+// `name` is the i18n key under "sounds".
 export const SOUNDS = [
-  { id: 'reminder.wav', label: 'קלאסי', emoji: '🔔' },
-  { id: 'reminder1.wav', label: 'ביפ', emoji: '📟' },
-  { id: 'reminder2.wav', label: 'התראה', emoji: '🚨' },
-  { id: 'reminder3.wav', label: 'צלצול', emoji: '🎐' },
-  { id: 'blobbell.wav', label: 'פעמון', emoji: '🛎️' },
-  { id: 'blobre3.wav', label: 'טינג', emoji: '✨' },
+  { id: 'reminder.wav', name: 'classic', emoji: '🔔' },
+  { id: 'reminder1.wav', name: 'beep', emoji: '📟' },
+  { id: 'reminder2.wav', name: 'alert', emoji: '🚨' },
+  { id: 'reminder3.wav', name: 'chime', emoji: '🎐' },
+  { id: 'blobbell.wav', name: 'bell', emoji: '🛎️' },
+  { id: 'blobre3.wav', name: 'ting', emoji: '✨' },
 ];
 
 const publicSound = (id) => `${process.env.PUBLIC_URL}/${id}`;
@@ -54,7 +56,7 @@ export function speak(text) {
   if (!('speechSynthesis' in window) || !text) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'he-IL';
+  utterance.lang = getLanguage().speech;
   utterance.rate = 0.9;
   window.speechSynthesis.speak(utterance);
 }

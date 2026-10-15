@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { t } from '../i18n';
 
 export const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 const TOKEN_KEY = 'pr_token';
@@ -43,11 +44,16 @@ api.interceptors.response.use(
   }
 );
 
-// Human (Hebrew) message for any request error.
-export function errorMessage(err, fallback = 'משהו השתבש, נסו שוב') {
-  if (err?.response?.data?.error) return err.response.data.error;
-  if (err?.request && !err.response) return 'אין חיבור לשרת. בדקו שהשרת פועל.';
-  return fallback;
+// Message in the user's language for any request error (the API sends a stable `code`).
+export function errorMessage(err) {
+  const data = err?.response?.data;
+  if (data?.code) {
+    const text = t(`errors.${data.code}`);
+    if (text !== `errors.${data.code}`) return text;
+  }
+  if (data?.error) return data.error;
+  if (err?.request && !err.response) return t('errors.network');
+  return t('errors.generic');
 }
 
 export const uploadsUrl = (fileName) => `${API_URL}/uploads/${encodeURIComponent(fileName)}`;

@@ -1,12 +1,14 @@
 import React from 'react';
+import { useI18n } from '../context/I18nContext';
 
 export default function ProgressRing({ value, total, size = 92 }) {
+  const { t } = useI18n();
   const r = 40;
   const circumference = 2 * Math.PI * r;
   const ratio = total ? value / total : 0;
 
   return (
-    <svg className="ring" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label={`${value} מתוך ${total} בוצעו`}>
+    <svg className="ring" width={size} height={size} viewBox="0 0 100 100" role="img" aria-label={t('ring', { done: value, total })}>
       <defs>
         <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#10b981" />

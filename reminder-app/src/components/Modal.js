@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useI18n } from '../context/I18nContext';
 
 export default function Modal({ title, onClose, children, actions }) {
   const ref = useRef(null);
@@ -21,7 +22,8 @@ export default function Modal({ title, onClose, children, actions }) {
   );
 }
 
-export function ConfirmDialog({ title, message, confirmLabel = 'כן, למחוק', onConfirm, onCancel }) {
+export function ConfirmDialog({ title, message, confirmLabel, onConfirm, onCancel }) {
+  const { t } = useI18n();
   return (
     <Modal
       title={title}
@@ -29,10 +31,10 @@ export function ConfirmDialog({ title, message, confirmLabel = 'כן, למחוק
       actions={
         <>
           <button type="button" className="btn btn-danger" onClick={onConfirm}>
-            {confirmLabel}
+            {confirmLabel || t('dialogs.confirmDelete')}
           </button>
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            ביטול
+            {t('common.cancel')}
           </button>
         </>
       }

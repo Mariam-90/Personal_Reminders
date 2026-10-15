@@ -1,19 +1,12 @@
 import React, { useState } from 'react';
+import { useI18n } from '../context/I18nContext';
 import { useReminders } from '../context/RemindersContext';
 import { useToast } from '../context/ToastContext';
 import useRecorder from '../hooks/useRecorder';
 import useDictation from '../hooks/useDictation';
-import { CATEGORIES, getCategory, RECURRENCE_LABELS } from '../lib/categories';
+import { CATEGORIES, categoryLabel, categoryTask, getCategory, RECURRENCES, recurrenceLabel } from '../lib/categories';
 import { addDays, dayLabel, formatTime, fromInputs, suggestedTime, toDateInput, toTimeInput } from '../lib/time';
 import { errorMessage } from '../lib/api';
-
-// One-tap times, relative to now.
-const QUICK_TIMES = [
-  { label: 'בעוד 30 דק׳', get: () => new Date(Date.now() + 30 * 60000) },
-  { label: 'בעוד שעה', get: () => new Date(Date.now() + 60 * 60000) },
-  { label: 'הערב 20:00', get: () => atHour(new Date(), 20) },
-  { label: 'מחר 09:00', get: () => atHour(addDays(new Date(), 1), 9) },
-];
 
 function atHour(day, hour) {
   const d = new Date(day);
@@ -21,12 +14,21 @@ function atHour(day, hour) {
   return d;
 }
 
+// One-tap times, relative to now. `key` is the i18n key under "add".
+const QUICK_TIMES = [
+  { key: 'in30', get: () => new Date(Date.now() + 30 * 60000) },
+  { key: 'in60', get: () => new Date(Date.now() + 60 * 60000) },
+  { key: 'tonight', get: () => atHour(new Date(), 20) },
+  { key: 'tomorrow', get: () => atHour(addDays(new Date(), 1), 9) },
+];
+
 const initialWhen = () => {
   const d = suggestedTime();
   return { date: toDateInput(d), time: toTimeInput(d) };
 };
 
 export default function AddReminderPage({ navigate }) {
+  const { t } = useI18n();
   const { add } = useReminders();
   const toast = useToast();
   const recorder = useRecorder();
@@ -36,29 +38,30 @@ export default function AddReminderPage({ navigate }) {
   const [recurrence, setRecurrence] = useState('none');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  const dictation = useDictation((text) => setTask((t) => (t ? `${t} ${text}` : text)));
+  const dictation = useDictation((text) => setTask((prev) => (prev ? `${prev} ${text}` : text)));
 
   const executionDate = fromInputs(when.date, when.time);
   const cat = getCategory(category);
   const inPast = executionDate && executionDate < new Date(Date.now() - 60000);
 
-  const pickTemplate = (c) => {
-    setCategory(c.id);
-    if (c.task) setTask(c.task);
+  const pickTemplate = (id) => {
+    setCategory(id);
+    const preset = categoryTask(id);
+    if (preset) setTask(preset);
   };
 
   const pickTime = (d) => setWhen({ date: toDateInput(d), time: toTimeInput(d) });
 
   const submit = async (e) => {
     e.preventDefault();
-    if (!task.trim()) return setError('יש לכתוב מה צריך לעשות');
-    if (!executionDate) return setError('יש לבחור תאריך ושעה');
+    if (!task.trim()) return setError(t('edit.needTask'));
+    if (!executionDate) return setError(t('edit.needDate'));
     if (recorder.recording) recorder.stop();
     setBusy(true);
     setError('');
     try {
       await add({ task: task.trim(), category, executionDate, recurrence, recording: recorder.blob });
-      toast(`נשמר! אזכיר לך ${dayLabel(executionDate)} ב-${formatTime(executionDate)} 🔔`);
+      toast(t('add.saved', { day: dayLabel(executionDate), time: formatTime(executionDate) }));
       navigate('today');
     } catch (err) {
       setError(errorMessage(err));
@@ -70,15 +73,15 @@ export default function AddReminderPage({ navigate }) {
   return (
     <section className="page">
       <h1 className="page-title">
-        <span className="grad-text">תזכורת חדשה</span>
+        <span className="grad-text">{t('add.title')}</span>
       </h1>
-      <p className="page-sub">שלושה צעדים קטנים: מה, מתי, וכמה פעמים.</p>
+      <p className="page-sub">{t('add.subtitle')}</p>
 
       <form className="stack" onSubmit={submit} noValidate>
         {error && <div className="form-error" role="alert">{error}</div>}
 
         <div className="card stack">
-          <h2 className="card-title">1. מה צריך לעשות?</h2>
+          <h2 className="card-title">{t('add.step1')}</h2>
           <div className="templates">
             {CATEGORIES.map((c) => (
               <button
@@ -86,68 +89,62 @@ export default function AddReminderPage({ navigate }) {
                 key={c.id}
                 className={`template ${category === c.id ? 'active' : ''}`}
                 style={{ '--cat': c.color }}
-                onClick={() => pickTemplate(c)}
+                onClick={() => pickTemplate(c.id)}
                 aria-pressed={category === c.id}
               >
                 <span className="t-emoji" aria-hidden="true">{c.emoji}</span>
-                {c.label}
+                {categoryLabel(c.id)}
               </button>
             ))}
           </div>
           <label className="field">
-            <span className="field-label">תיאור</span>
+            <span className="field-label">{t('add.description')}</span>
             <div className="input-with-btn">
-              <input
-                className="input"
-                value={task}
-                onChange={(e) => setTask(e.target.value)}
-                placeholder="למשל: לקחת כדור לחץ דם"
-                maxLength={200}
-              />
+              <input className="input" value={task} onChange={(e) => setTask(e.target.value)} placeholder={t('add.placeholder')} maxLength={200} />
               {dictation.supported && (
                 <button
                   type="button"
                   className="icon-btn"
                   onClick={dictation.toggle}
-                  aria-label={dictation.listening ? 'הפסקת הכתבה' : 'הכתבה קולית'}
-                  title="הכתבה קולית"
+                  aria-label={dictation.listening ? t('add.stopDictate') : t('add.dictate')}
+                  title={t('add.dictate')}
                 >
                   {dictation.listening ? '⏹️' : '🎙️'}
                 </button>
               )}
             </div>
-            {dictation.listening && <span className="field-hint">מקשיב… אפשר לדבר</span>}
+            {dictation.listening && <span className="field-hint">{t('add.listening')}</span>}
           </label>
         </div>
 
         <div className="card stack">
-          <h2 className="card-title">2. מתי?</h2>
+          <h2 className="card-title">{t('add.step2')}</h2>
           <div className="chips">
             {QUICK_TIMES.map((q) => (
-              <button type="button" key={q.label} className="chip" onClick={() => pickTime(q.get())}>
-                {q.label}
+              <button type="button" key={q.key} className="chip" onClick={() => pickTime(q.get())}>
+                {t(`add.${q.key}`)}
               </button>
             ))}
           </div>
           <div className="when-grid">
             <label className="field">
-              <span className="field-label">תאריך</span>
+              <span className="field-label">{t('add.date')}</span>
               <input className="input" type="date" value={when.date} onChange={(e) => setWhen({ ...when, date: e.target.value })} />
             </label>
             <label className="field">
-              <span className="field-label">שעה</span>
+              <span className="field-label">{t('add.time')}</span>
               <input className="input" type="time" value={when.time} onChange={(e) => setWhen({ ...when, time: e.target.value })} />
             </label>
           </div>
-          {inPast && <span className="badge badge-warn">⚠️ הזמן שנבחר כבר עבר</span>}
+          {inPast && <span className="badge badge-warn">{t('add.past')}</span>}
         </div>
 
         <div className="card stack">
-          <h2 className="card-title">3. כמה פעמים?</h2>
+          <h2 className="card-title">{t('add.step3')}</h2>
           <div className="segmented">
-            {Object.entries(RECURRENCE_LABELS).map(([id, label]) => (
+            {RECURRENCES.map((id) => (
               <button type="button" key={id} className={recurrence === id ? 'active' : ''} onClick={() => setRecurrence(id)} aria-pressed={recurrence === id}>
-                {label}
+                {recurrenceLabel(id)}
               </button>
             ))}
           </div>
@@ -155,28 +152,28 @@ export default function AddReminderPage({ navigate }) {
 
         <div className="card stack">
           <h2 className="card-title">
-            🎤 הקלטה קולית <span className="badge">לא חובה</span>
+            {t('add.recording')} <span className="badge">{t('common.optional')}</span>
           </h2>
-          <p style={{ color: 'var(--muted)' }}>הקליטו את התזכורת בקול שלכם או של בן משפחה. היא תושמע בזמן התזכורת.</p>
+          <p style={{ color: 'var(--muted)' }}>{t('add.recordingHelp')}</p>
           <div className="recorder">
             {recorder.recording ? (
               <>
                 <span className="rec-dot" aria-hidden="true" />
-                <span>מקליט… {recorder.seconds} שנ׳</span>
+                <span>{t('add.recordingNow', { seconds: recorder.seconds })}</span>
                 <button type="button" className="btn btn-danger" onClick={recorder.stop}>
-                  ⏹️ עצירה
+                  {t('add.stop')}
                 </button>
               </>
             ) : (
               <button type="button" className="btn btn-ghost" onClick={recorder.start}>
-                {recorder.blob ? '🔁 הקלטה מחדש' : '🎙️ התחלת הקלטה'}
+                {recorder.blob ? t('add.rerecord') : t('add.startRecord')}
               </button>
             )}
             {recorder.url && !recorder.recording && (
               <>
                 {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <audio controls src={recorder.url} />
-                <button type="button" className="icon-btn" onClick={recorder.clear} aria-label="מחיקת ההקלטה">
+                <button type="button" className="icon-btn" onClick={recorder.clear} aria-label={t('add.deleteRecording')}>
                   🗑️
                 </button>
               </>
@@ -189,16 +186,16 @@ export default function AddReminderPage({ navigate }) {
           <div className="summary" aria-live="polite">
             <span className="s-emoji" aria-hidden="true">{cat.emoji}</span>
             <div>
-              <strong>{task.trim()}</strong>
+              <strong dir="auto">{task.trim()}</strong>
               <div style={{ color: 'var(--muted)' }}>
-                {dayLabel(executionDate)} ב-{formatTime(executionDate)} · {RECURRENCE_LABELS[recurrence]}
+                {t('add.summary', { day: dayLabel(executionDate), time: formatTime(executionDate), repeat: recurrenceLabel(recurrence) })}
               </div>
             </div>
           </div>
         )}
 
         <button type="submit" className="btn btn-primary btn-xl btn-block" disabled={busy}>
-          {busy ? 'שומר…' : '🔔 שמירת התזכורת'}
+          {busy ? t('common.saving') : t('add.save')}
         </button>
       </form>
     </section>

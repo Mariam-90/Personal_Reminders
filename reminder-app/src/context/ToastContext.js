@@ -1,14 +1,16 @@
 import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { useI18n } from './I18nContext';
 
 const ToastContext = createContext(null);
 
 export function ToastProvider({ children }) {
+  const { t } = useI18n();
   const [toasts, setToasts] = useState([]);
   const nextId = useRef(1);
 
-  const dismiss = useCallback((id) => setToasts((list) => list.filter((t) => t.id !== id)), []);
+  const dismiss = useCallback((id) => setToasts((list) => list.filter((item) => item.id !== id)), []);
 
-  // toast('נשמר', { type: 'success' | 'error' | 'info', action: { label, onClick } })
+  // toast('Saved', { type: 'success' | 'error' | 'info', action: { label, onClick } })
   const toast = useCallback(
     (message, { type = 'success', action, duration = 4500 } = {}) => {
       const id = nextId.current++;
@@ -24,22 +26,22 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={value}>
       {children}
       <div className="toasts" role="status" aria-live="polite">
-        {toasts.map((t) => (
-          <div key={t.id} className={`toast toast-${t.type}`}>
-            <span>{t.message}</span>
-            {t.action && (
+        {toasts.map((item) => (
+          <div key={item.id} className={`toast toast-${item.type}`}>
+            <span>{item.message}</span>
+            {item.action && (
               <button
                 type="button"
                 className="toast-action"
                 onClick={() => {
-                  t.action.onClick();
-                  dismiss(t.id);
+                  item.action.onClick();
+                  dismiss(item.id);
                 }}
               >
-                {t.action.label}
+                {item.action.label}
               </button>
             )}
-            <button type="button" className="toast-close" aria-label="סגירה" onClick={() => dismiss(t.id)}>
+            <button type="button" className="toast-close" aria-label={t('toast.close')} onClick={() => dismiss(item.id)}>
               ✕
             </button>
           </div>

@@ -15,6 +15,7 @@
 | 📈 **היסטוריה** | אחוז הצלחה שבועי, רצף ימים, גרף של 7 ימים ורשימות "בוצעו" / "פוספסו" |
 | 🤝 **איש קשר / מטפל** | כפתור חיוג מהיר בכותרת, והודעת וואטסאפ מוכנה כשמפספסים תזכורת |
 | 👤 **פרופיל** | פרטים אישיים, מידע חשוב (תרופות, אלרגיות), שורות מידע חופשיות, בחירת צליל עם האזנה מקדימה, העלאת צליל אישי |
+| 🌐 **3 שפות** | עברית, العربية ו-English – כולל כיוון (RTL/LTR), תאריכים ושעות, הקראה בקול והכתבה בשפה הנבחרת |
 | 👓 **נגישות** | מצב טקסט גדול, ניגודיות גבוהה, RTL מלא, תמיכה בקורא מסך ובמקלדת, מותאם לטלפון |
 
 ## 🧱 טכנולוגיות
@@ -84,7 +85,8 @@ cd reminder-server && npm test
 reminder-app/src
 ├── pages/        Today · Add · Reminders · History · Profile · Auth
 ├── components/   Shell, AlertEngine, ReminderCard, Modal…
-├── context/      Auth, Reminders, Toast
+├── context/      Auth, I18n, Reminders, Toast
+├── i18n/         he · ar · en dictionaries + t()
 ├── hooks/        useNow, useRecorder, useDictation, usePreferences…
 ├── lib/          api, time, stats, sounds, categories, caregiver
 └── styles.css

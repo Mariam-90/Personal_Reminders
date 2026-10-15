@@ -1,8 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
+import { getLanguage } from '../i18n';
 
 const SpeechRecognition = typeof window !== 'undefined' && (window.SpeechRecognition || window.webkitSpeechRecognition);
 
-// Speech-to-text in Hebrew, for people who find typing hard.
+// Speech-to-text in the app's language, for people who find typing hard.
 export default function useDictation(onText) {
   const [listening, setListening] = useState(false);
   const recRef = useRef(null);
@@ -14,7 +15,7 @@ export default function useDictation(onText) {
       return;
     }
     const rec = new SpeechRecognition();
-    rec.lang = 'he-IL';
+    rec.lang = getLanguage().speech;
     rec.interimResults = false;
     rec.maxAlternatives = 1;
     rec.onresult = (e) => onText(e.results[0][0].transcript);

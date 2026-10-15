@@ -3,11 +3,11 @@ import { useReminders } from '../context/RemindersContext';
 import { useToast } from '../context/ToastContext';
 import { errorMessage } from '../lib/api';
 import { dayLabel, formatTime } from '../lib/time';
-
-const CHEERS = ['כל הכבוד! 🎉', 'מעולה! 👏', 'יופי, בוצע ✔', 'איזה יופי! 🌟'];
+import { useI18n } from '../context/I18nContext';
 
 // Complete / undo / snooze / delete with friendly feedback, shared by all pages.
 export default function useReminderActions() {
+  const { t } = useI18n();
   const { complete, undo, snooze, remove } = useReminders();
   const toast = useToast();
   const [editing, setEditing] = useState(null);
@@ -32,19 +32,22 @@ export default function useReminderActions() {
       run(
         () => complete(id),
         (res) => {
-          const cheer = CHEERS[Math.floor(Math.random() * CHEERS.length)];
-          const next = res.next ? ` הבאה: ${dayLabel(res.next.executionDate)} ב-${formatTime(res.next.executionDate)}` : '';
-          toast(`${cheer}${next}`, { action: { label: 'ביטול', onClick: () => run(() => undo(id)) } });
+          const cheers = t('actions.cheers');
+          const cheer = cheers[Math.floor(Math.random() * cheers.length)];
+          const next = res.next
+            ? t('actions.next', { day: dayLabel(res.next.executionDate), time: formatTime(res.next.executionDate) })
+            : '';
+          toast(`${cheer}${next}`, { action: { label: t('actions.undo'), onClick: () => run(() => undo(id)) } });
         }
       ),
-    [run, complete, undo, toast]
+    [run, complete, undo, toast, t]
   );
 
-  const onUndo = useCallback((id) => run(() => undo(id), () => toast('הסימון בוטל', { type: 'info' })), [run, undo, toast]);
+  const onUndo = useCallback((id) => run(() => undo(id), () => toast(t('actions.undone'), { type: 'info' })), [run, undo, toast, t]);
 
   const onSnooze = useCallback(
-    (id, minutes = 10) => run(() => snooze(id, minutes), () => toast(`אזכיר שוב בעוד ${minutes} דקות ⏰`, { type: 'info' })),
-    [run, snooze, toast]
+    (id, minutes = 10) => run(() => snooze(id, minutes), () => toast(t('actions.snoozed', { minutes }), { type: 'info' })),
+    [run, snooze, toast, t]
   );
 
   const confirmDelete = useCallback(
@@ -52,11 +55,11 @@ export default function useReminderActions() {
       run(
         () => remove(deleting._id),
         () => {
-          toast('התזכורת נמחקה', { type: 'info' });
+          toast(t('actions.deleted'), { type: 'info' });
           setDeleting(null);
         }
       ),
-    [run, remove, deleting, toast]
+    [run, remove, deleting, toast, t]
   );
 
   return {

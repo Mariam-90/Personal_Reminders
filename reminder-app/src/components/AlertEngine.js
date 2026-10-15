@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useReminders } from '../context/RemindersContext';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useI18n } from '../context/I18nContext';
 import useNow from '../hooks/useNow';
 import useReminderActions from '../hooks/useReminderActions';
 import { getCategory } from '../lib/categories';
@@ -40,6 +41,7 @@ function notify(title, body) {
  * sound + spoken task (or the user's recording), repeated until the user responds.
  */
 export default function AlertEngine() {
+  const { t } = useI18n();
   const { reminders } = useReminders();
   const { user } = useAuth();
   const toast = useToast();
@@ -73,12 +75,12 @@ export default function AlertEngine() {
       const key = alertKey(r, 'pre:');
       if (minutes > 0 && minutes <= PRE_ALERT_MINUTES && !seen.has(key)) {
         markSeen(key);
-        const msg = `בעוד ${Math.ceil(minutes)} דקות: ${r.task}`;
+        const msg = t('alert.soon', { minutes: Math.ceil(minutes), task: r.task });
         toast(`⏳ ${msg}`, { type: 'info', duration: 10000 });
-        if (document.hidden) notify('תזכורת מתקרבת', msg);
+        if (document.hidden) notify(t('alert.soonTitle'), msg);
       }
     });
-  }, [reminders, now, seen, markSeen, toast]);
+  }, [reminders, now, seen, markSeen, toast, t]);
 
   // Ring: sound, then the task out loud; repeat until handled.
   const stopRef = useRef(null);
@@ -92,16 +94,16 @@ export default function AlertEngine() {
         if (r.recordedTaskAudioFileName) {
           new Audio(uploadsUrl(r.recordedTaskAudioFileName)).play().catch(() => speak(r.task));
         } else {
-          speak(`תזכורת: ${r.task}`);
+          speak(t('alert.spoken', { task: r.task }));
         }
       }, 2500);
     },
-    [user]
+    [user, t]
   );
 
   useEffect(() => {
     if (!active) return undefined;
-    notify('⏰ הגיע הזמן!', active.task);
+    notify(t('alert.notifyTitle'), active.task);
     announce(active);
     let count = 1;
     const id = setInterval(() => {
@@ -129,26 +131,26 @@ export default function AlertEngine() {
   };
 
   return (
-    <div className="alert-screen" role="alertdialog" aria-modal="true" aria-label={`תזכורת: ${active.task}`} style={{ '--cat': cat.color }}>
+    <div className="alert-screen" role="alertdialog" aria-modal="true" aria-label={t('alert.aria', { task: active.task })} style={{ '--cat': cat.color }}>
       <div className="alert-box">
         <div className="alert-ring" aria-hidden="true">{cat.emoji}</div>
-        <div className="alert-kicker">⏰ הגיע הזמן</div>
-        <div className="alert-task">{active.task}</div>
+        <div className="alert-kicker">{t('alert.timeIs')}</div>
+        <div className="alert-task" dir="auto">{active.task}</div>
         <div className="alert-time">{formatTime(dueTime(active))}</div>
         <div className="alert-actions">
           <button type="button" className="btn btn-success btn-xl btn-block" onClick={handle(() => actions.onComplete(active._id))}>
-            ✔ עשיתי את זה
+            {t('alert.did')}
           </button>
           <div className="row">
             <button type="button" className="btn btn-ghost btn-xl" onClick={handle(() => actions.onSnooze(active._id, 10))}>
-              ⏰ עוד 10 דק׳
+              {t('alert.snooze')}
             </button>
             <button type="button" className="btn btn-ghost btn-xl" onClick={() => announce(active)}>
-              🔊 שוב
+              {t('alert.again')}
             </button>
           </div>
           <button type="button" className="btn btn-ghost btn-block" onClick={close}>
-            סגירה
+            {t('common.close')}
           </button>
         </div>
       </div>

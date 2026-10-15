@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { t } from '../i18n';
 
 const MAX_SECONDS = 60;
 
@@ -21,7 +22,7 @@ export default function useRecorder() {
   const start = useCallback(async () => {
     setError('');
     if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
-      setError('הדפדפן הזה לא תומך בהקלטה');
+      setError(t('recorder.unsupported'));
       return;
     }
     try {
@@ -49,7 +50,7 @@ export default function useRecorder() {
         });
       }, 1000);
     } catch {
-      setError('אין גישה למיקרופון. יש לאשר גישה בדפדפן.');
+      setError(t('recorder.noMic'));
     }
   }, [stop]);
 

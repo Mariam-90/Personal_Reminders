@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useI18n } from '../context/I18nContext';
 import { useReminders } from '../context/RemindersContext';
 import useNow from '../hooks/useNow';
 import useReminderActions from '../hooks/useReminderActions';
@@ -12,43 +13,41 @@ import { hasCaregiver, telLink, whatsappLink } from '../lib/caregiver';
 import { speak } from '../lib/sounds';
 
 function Clock() {
+  const { t } = useI18n();
   const now = useNow(1000);
   return (
-    <div className="clock" aria-label={`השעה ${formatTime(now)}`}>
+    <div className="clock" aria-label={t('today.clock', { time: formatTime(now) })}>
       {formatTime(now)}
     </div>
   );
 }
 
 function Hero({ reminder, now, actions }) {
+  const { t } = useI18n();
   const cat = getCategory(reminder.category);
-  const status = reminderStatus(reminder, now);
   const due = dueTime(reminder);
-  const kicker =
-    status === 'due'
-      ? { className: 'due', text: '⏰ הגיע הזמן!' }
-      : { className: '', text: `הבא בתור · ${relativeTime(due, now)}` };
+  const isDue = reminderStatus(reminder, now) === 'due';
 
   return (
-    <section className="card hero" style={{ '--hero-color': cat.color }} aria-label="התזכורת הבאה">
-      <span className={`hero-kicker ${kicker.className}`}>{kicker.text}</span>
+    <section className="card hero" style={{ '--hero-color': cat.color }} aria-label={t('today.nextAria')}>
+      <span className={`hero-kicker ${isDue ? 'due' : ''}`}>
+        {isDue ? t('today.timeIs') : t('today.upNext', { rel: relativeTime(due, now) })}
+      </span>
       <div className="hero-main">
         <div className="hero-emoji" aria-hidden="true">{cat.emoji}</div>
         <div>
-          <div className="hero-task">{reminder.task}</div>
-          <div className="hero-when">
-            {dayLabel(due, now)} בשעה {formatTime(due)}
-          </div>
+          <div className="hero-task" dir="auto">{reminder.task}</div>
+          <div className="hero-when">{t('today.when', { day: dayLabel(due, now), time: formatTime(due) })}</div>
         </div>
       </div>
       <div className="hero-actions">
         <button type="button" className="btn btn-success btn-xl" onClick={() => actions.onComplete(reminder._id)}>
-          ✔ עשיתי
+          {t('today.did')}
         </button>
-        <button type="button" className="btn btn-ghost btn-xl" onClick={() => actions.onSnooze(reminder._id, 10)} title="להזכיר שוב בעוד 10 דקות">
-          ⏰ 10 דק׳
+        <button type="button" className="btn btn-ghost btn-xl" onClick={() => actions.onSnooze(reminder._id, 10)} title={t('today.snoozeTitle')}>
+          {t('today.snooze')}
         </button>
-        <button type="button" className="btn btn-ghost btn-xl" onClick={() => speak(reminder.task)} title="הקראה בקול">
+        <button type="button" className="btn btn-ghost btn-xl" onClick={() => speak(reminder.task)} title={t('today.readAloud')} aria-label={t('today.readAloud')}>
           🔊
         </button>
       </div>
@@ -57,6 +56,7 @@ function Hero({ reminder, now, actions }) {
 }
 
 export default function TodayPage({ navigate }) {
+  const { t } = useI18n();
   const { user } = useAuth();
   const { reminders, loading } = useReminders();
   const now = useNow(15000);
@@ -85,7 +85,7 @@ export default function TodayPage({ navigate }) {
       <div className="hello">
         <div>
           <h1>
-            {greeting(now)}, <span className="grad-text">{name}</span>
+            {greeting(now)}, <bdi className="grad-text">{name}</bdi>
           </h1>
           <div className="date">{formatDate(now)}</div>
         </div>
@@ -102,10 +102,10 @@ export default function TodayPage({ navigate }) {
       ) : (
         <div className="card empty">
           <div className="empty-emoji">🌤️</div>
-          <h3>אין תזכורות קרובות</h3>
-          <p>אפשר לנוח, או להוסיף תזכורת חדשה.</p>
+          <h3>{t('today.emptyTitle')}</h3>
+          <p>{t('today.emptyText')}</p>
           <button type="button" className="btn btn-primary btn-xl" onClick={() => navigate('add')}>
-            + תזכורת חדשה
+            {t('common.newReminder')}
           </button>
         </div>
       )}
@@ -114,7 +114,7 @@ export default function TodayPage({ navigate }) {
         <div>
           {missed.length > 0 && (
             <>
-              <h2 className="section-label">⚠️ לא בוצעו</h2>
+              <h2 className="section-label">{t('today.notDone')}</h2>
               <div className="timeline">
                 {missed.map((r) => (
                   <ReminderCard key={r._id} reminder={r} now={now} onComplete={actions.onComplete} onDelete={actions.onDelete} />
@@ -124,8 +124,8 @@ export default function TodayPage({ navigate }) {
                 <div className="card sos-card" style={{ marginTop: 12 }}>
                   <span className="sos-emoji" aria-hidden="true">💬</span>
                   <div className="sos-text">
-                    <strong>צריך עזרה?</strong>
-                    <small>אפשר לעדכן את {user.caregiverName || 'איש הקשר'} בהודעה</small>
+                    <strong>{t('today.needHelp')}</strong>
+                    <small>{t('today.tellCaregiver', { name: user.caregiverName || t('header.theContact') })}</small>
                   </div>
                   <a
                     className="btn btn-accent btn-sm"
@@ -133,12 +133,15 @@ export default function TodayPage({ navigate }) {
                     rel="noreferrer"
                     href={whatsappLink(
                       user.caregiverPhone,
-                      `היי, זה ${name}. פספסתי: ${missed.map((r) => `${r.task} (${formatTime(r.executionDate)})`).join(', ')}`
+                      t('today.missedMessage', {
+                        name,
+                        list: missed.map((r) => `${r.task} (${formatTime(r.executionDate)})`).join(', '),
+                      })
                     )}
                   >
-                    וואטסאפ
+                    {t('today.whatsapp')}
                   </a>
-                  <a className="btn btn-ghost btn-sm" href={telLink(user.caregiverPhone)}>
+                  <a className="btn btn-ghost btn-sm" href={telLink(user.caregiverPhone)} aria-label={t('header.callHelp')}>
                     📞
                   </a>
                 </div>
@@ -146,7 +149,7 @@ export default function TodayPage({ navigate }) {
             </>
           )}
 
-          <h2 className="section-label">📅 התוכנית להיום</h2>
+          <h2 className="section-label">{t('today.plan')}</h2>
           {today.length ? (
             <div className="timeline">
               {today.map((r) => (
@@ -162,23 +165,21 @@ export default function TodayPage({ navigate }) {
               ))}
             </div>
           ) : (
-            !loading && <div className="card" style={{ color: 'var(--muted)' }}>אין תזכורות להיום.</div>
+            !loading && <div className="card" style={{ color: 'var(--muted)' }}>{t('today.noneToday')}</div>
           )}
         </div>
 
         <aside className="stack">
-          <h2 className="section-label">ההתקדמות שלי</h2>
+          <h2 className="section-label">{t('today.progress')}</h2>
           <div className="card progress-card">
             <ProgressRing value={doneToday} total={today.length} />
             <div>
-              <h3>
-                {doneToday} מתוך {today.length} בוצעו
-              </h3>
-              <p>{today.length && doneToday === today.length ? 'סיימת הכל להיום! 🎉' : 'כל צעד קטן נחשב.'}</p>
+              <h3>{t('today.doneOf', { done: doneToday, total: today.length })}</h3>
+              <p>{today.length && doneToday === today.length ? t('today.allDone') : t('today.keepGoing')}</p>
             </div>
           </div>
           <button type="button" className="btn btn-primary btn-xl btn-block" onClick={() => navigate('add')}>
-            + תזכורת חדשה
+            {t('common.newReminder')}
           </button>
         </aside>
       </div>

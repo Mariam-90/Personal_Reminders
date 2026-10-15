@@ -1,5 +1,6 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { I18nProvider, useI18n } from './context/I18nContext';
 import { ToastProvider } from './context/ToastContext';
 import { RemindersProvider } from './context/RemindersContext';
 import useHashRoute from './hooks/useHashRoute';
@@ -38,10 +39,11 @@ function SignedInApp() {
 
 function Root() {
   const { user, status } = useAuth();
+  const { t } = useI18n();
   if (status === 'loading') {
     return (
       <div className="splash">
-        <div className="spinner" role="status" aria-label="טוען" />
+        <div className="spinner" role="status" aria-label={t('app.loading')} />
       </div>
     );
   }
@@ -50,10 +52,12 @@ function Root() {
 
 export default function App() {
   return (
-    <ToastProvider>
-      <AuthProvider>
-        <Root />
-      </AuthProvider>
-    </ToastProvider>
+    <I18nProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <Root />
+        </AuthProvider>
+      </ToastProvider>
+    </I18nProvider>
   );
 }
