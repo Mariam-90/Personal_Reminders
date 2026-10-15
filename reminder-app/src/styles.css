@@ -860,8 +860,8 @@ audio { max-width: 100%; height: 44px; }
 
 @media (min-width: 900px) {
   .nav {
-    top: 14px;
-    bottom: auto;
+    position: static;
+    transform: none;
     width: auto;
     border-radius: 999px;
   }
@@ -876,7 +876,7 @@ audio { max-width: 100%; height: 44px; }
   .nav-item .nav-icon { font-size: 1.15rem; }
   .nav-item.nav-add .nav-icon { width: 26px; height: 26px; font-size: 1rem; }
   .app { padding-bottom: 40px; }
-  .topbar { position: relative; }
+  .topbar { position: relative; max-width: 1200px; }
   .today-grid { grid-template-columns: 1.4fr 1fr; align-items: start; }
 }
 
@@ -907,4 +907,13 @@ audio { max-width: 100%; height: 44px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+@media (min-width: 900px) and (max-width: 1180px) {
+  .brand > span:last-child { display: none; }
+  .topbar .btn-sm span { display: none; }
+}
+
+@media (min-width: 900px) {
+  .toasts { top: auto; bottom: 24px; }
 }

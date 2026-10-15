@@ -21,6 +21,21 @@ export default function Shell({ route, navigate, children }) {
           <span>התזכורות שלי</span>
         </a>
         <span className="spacer" />
+        <nav className="nav" aria-label="ניווט ראשי">
+          {NAV_ITEMS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={`nav-item ${item.className || ''} ${route === item.id ? 'active' : ''}`}
+              aria-current={route === item.id ? 'page' : undefined}
+              onClick={() => navigate(item.id)}
+            >
+              <span className="nav-icon" aria-hidden="true">{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+        <span className="spacer" />
         {hasCaregiver(user) && (
           <a className="btn btn-danger btn-sm" href={telLink(user.caregiverPhone)} title={`התקשרות ל${user.caregiverName || 'איש הקשר'}`}>
             📞 <span>{user.caregiverName ? `חייג ל${user.caregiverName}` : 'חיוג לעזרה'}</span>
@@ -31,20 +46,6 @@ export default function Shell({ route, navigate, children }) {
         </button>
       </header>
 
-      <nav className="nav" aria-label="ניווט ראשי">
-        {NAV_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={`nav-item ${item.className || ''} ${route === item.id ? 'active' : ''}`}
-            aria-current={route === item.id ? 'page' : undefined}
-            onClick={() => navigate(item.id)}
-          >
-            <span className="nav-icon" aria-hidden="true">{item.icon}</span>
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </nav>
 
       <main>{children}</main>
     </div>

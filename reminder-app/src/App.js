@@ -4,11 +4,15 @@ import { ToastProvider } from './context/ToastContext';
 import { RemindersProvider } from './context/RemindersContext';
 import useHashRoute from './hooks/useHashRoute';
 import Shell, { NAV_ITEMS } from './components/Shell';
+import AlertEngine from './components/AlertEngine';
 import AuthPage from './pages/AuthPage';
+import TodayPage from './pages/TodayPage';
 
 const ROUTES = NAV_ITEMS.map((n) => n.id);
 
-const PAGES = {};
+const PAGES = {
+  today: TodayPage,
+};
 
 function ComingSoon() {
   return (
@@ -29,6 +33,7 @@ function SignedInApp() {
     <RemindersProvider>
       <Shell route={route} navigate={navigate}>
         <Page navigate={navigate} />
+        <AlertEngine />
       </Shell>
     </RemindersProvider>
   );
