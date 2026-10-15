@@ -7,11 +7,15 @@ import Shell, { NAV_ITEMS } from './components/Shell';
 import AlertEngine from './components/AlertEngine';
 import AuthPage from './pages/AuthPage';
 import TodayPage from './pages/TodayPage';
+import AddReminderPage from './pages/AddReminderPage';
+import RemindersPage from './pages/RemindersPage';
 
 const ROUTES = NAV_ITEMS.map((n) => n.id);
 
 const PAGES = {
   today: TodayPage,
+  add: AddReminderPage,
+  reminders: RemindersPage,
 };
 
 function ComingSoon() {
