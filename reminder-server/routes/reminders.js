@@ -1,147 +1,166 @@
 const express = require('express');
-const router = express.Router();
 const mongoose = require('mongoose');
-const User = require('../models/User');
 const Reminder = require('../models/Reminder');
-const path = require('path');
+const { requireAuth } = require('../middleware/auth');
+const { diskUpload, removeUpload } = require('../middleware/upload');
+const { scheduleNext, rollOverDue } = require('../lib/recurrence');
 
-module.exports = (upload) => {
+const router = express.Router();
+router.use(requireAuth);
 
-// Add new reminder
-router.post('/:userId', upload.fields([{ name: 'audioFile' }, { name: 'recordedTaskAudioFile' }]), async (req, res) => {
+const MAX_SNOOZE_MINUTES = 24 * 60;
+
+// Validates the editable fields; returns { data } or { error }.
+function parseReminderInput(body, { partial = false } = {}) {
+  const data = {};
+
+  if (body.task !== undefined || !partial) {
+    const task = String(body.task || '').trim();
+    if (!task) return { error: 'יש לכתוב מה צריך לעשות' };
+    if (task.length > 200) return { error: 'תיאור המשימה ארוך מדי' };
+    data.task = task;
+  }
+
+  if (body.executionDate !== undefined || !partial) {
+    const executionDate = new Date(body.executionDate);
+    if (!body.executionDate || Number.isNaN(executionDate.getTime())) {
+      return { error: 'יש לבחור תאריך ושעה תקינים' };
+    }
+    data.executionDate = executionDate;
+  }
+
+  if (body.recurrence !== undefined) {
+    if (!Reminder.RECURRENCES.includes(body.recurrence)) return { error: 'סוג חזרה לא תקין' };
+    data.recurrence = body.recurrence;
+  }
+
+  if (body.category !== undefined) {
+    data.category = String(body.category).slice(0, 30) || 'general';
+  }
+
+  return { data };
+}
+
+// Loads a reminder that belongs to the logged-in user, or answers 404.
+async function findOwned(req, res) {
+  if (!mongoose.isValidObjectId(req.params.id)) {
+    res.status(404).json({ error: 'התזכורת לא נמצאה' });
+    return null;
+  }
+  const reminder = await Reminder.findOne({ _id: req.params.id, userId: req.userId });
+  if (!reminder) res.status(404).json({ error: 'התזכורת לא נמצאה' });
+  return reminder;
+}
+
+router.get('/', async (req, res, next) => {
   try {
-    const { userId } = req.params;
-    const { task, date, time, recurrence } = req.body;
-    const executionDate = new Date(`${date}T${time}:00`);
+    await rollOverDue(req.userId);
+    const reminders = await Reminder.find({ userId: req.userId }).sort({ executionDate: 1 });
+    res.json(reminders);
+  } catch (err) {
+    next(err);
+  }
+});
 
-    const audioFileName = req.files['audioFile'] ? req.files['audioFile'][0].filename : null;
-    const recordedTaskAudioFileName = req.files['recordedTaskAudioFile'] ? req.files['recordedTaskAudioFile'][0].filename : null;
-
-    const newReminder = new Reminder({
-      task,
-      executionDate,
-      userId,
-      isCompleted: false,
-      recurrence,
-      audioFileName,
-      recordedTaskAudioFileName,
+router.post('/', diskUpload.single('recording'), async (req, res, next) => {
+  try {
+    const { data, error } = parseReminderInput(req.body);
+    if (error) {
+      removeUpload(req.file?.filename);
+      return res.status(400).json({ error });
+    }
+    const reminder = await Reminder.create({
+      ...data,
+      userId: req.userId,
+      recordedTaskAudioFileName: req.file ? req.file.filename : null,
     });
-
-    await newReminder.save();
-    res.status(201).json(newReminder);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    return res.status(201).json(reminder);
+  } catch (err) {
+    removeUpload(req.file?.filename);
+    return next(err);
   }
 });
 
-  // Get reminders by user ID
-  router.get('/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const reminders = await Reminder.find({ userId });
-      res.status(200).json(reminders);
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-  
-  // Update reminder by ID
-router.put('/:id', async (req, res) => {
+router.patch('/:id', async (req, res, next) => {
   try {
-    const { id } = req.params;
-    const { isCompleted, completionDate, audioPlayed, recurrence } = req.body;
+    const reminder = await findOwned(req, res);
+    if (!reminder) return undefined;
 
-    const updateData = {};
+    const { data, error } = parseReminderInput(req.body, { partial: true });
+    if (error) return res.status(400).json({ error });
 
-    if (isCompleted) {
-      updateData.isCompleted = true;
-      updateData.completionDate = completionDate ? new Date(completionDate) : new Date();
-    }
-
-    // Find the existing reminder
-    const existingReminder = await Reminder.findById(id);
-    if (!existingReminder) {
-      return res.status(404).json({ error: 'Reminder not found' });
-    }
-
-    // Create a new reminder only if it hasn't been created yet and recurrence is not 'none'
-    if (audioPlayed && recurrence && recurrence !== 'none' && !existingReminder.hasNewReminder) {
-      let nextExecutionDate;
-      const reminderDate = new Date(existingReminder.executionDate);
-
-      switch (recurrence) {
-        case 'daily':
-          nextExecutionDate = new Date(reminderDate.getTime() + (24 * 60 * 60 * 1000)); // Add one day
-          break;
-        case 'weekly':
-          nextExecutionDate = new Date(reminderDate.getTime() + (7 * 24 * 60 * 60 * 1000)); // Add one week
-          break;
-        case 'monthly':
-          nextExecutionDate = new Date(reminderDate);
-          nextExecutionDate.setMonth(reminderDate.getMonth() + 1); // Add one month
-          break;
-        default:
-          throw new Error('Invalid recurrence type');
-      }
-
-      const newReminder = new Reminder({
-        task: existingReminder.task,
-        executionDate: nextExecutionDate,
-        userId: existingReminder.userId,
-        recurrence: existingReminder.recurrence,
-        audioFileName: existingReminder.audioFileName,
-        recordedTaskAudioFileName: existingReminder.recordedTaskAudioFileName,
-        isCompleted: false
-      });
-
-      await newReminder.save();
-      updateData.hasNewReminder = true;
-    }
-
-    const updatedReminder = await Reminder.findByIdAndUpdate(id, updateData, { new: true });
-    res.status(200).json(updatedReminder);
-  } catch (error) {
-    console.error('Error in updating reminder:', error);
-    res.status(400).json({ error: error.message });
+    Object.assign(reminder, data);
+    if (data.executionDate) reminder.snoozeUntil = null;
+    await reminder.save();
+    return res.json(reminder);
+  } catch (err) {
+    return next(err);
   }
 });
 
-  // Delete reminder
-  router.delete('/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const deletedReminder = await Reminder.findByIdAndDelete(id);
-      if (!deletedReminder) {
-        return res.status(404).json({ message: 'Reminder not found' });
-      }
-      res.status(200).json({ message: 'Reminder deleted', deletedReminder });
-    } catch (error) {
-      res.status(400).json({ error: error.message });
-    }
-  });
-  router.put('/update-details/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { task, date, time } = req.body;
-  
-      const executionDate = new Date(`${date}T${time}:00`);
-  
-      const updatedReminder = await Reminder.findByIdAndUpdate(
-        id,
-        { task, executionDate },
-        { new: true }
-      );
-  
-      if (!updatedReminder) {
-        return res.status(404).json({ error: 'Reminder not found' });
-      }
-  
-      res.status(200).json(updatedReminder);
-    } catch (error) {
-      console.error('Error in updating reminder:', error);
-      res.status(400).json({ error: error.message });
-    }
-  });
+router.post('/:id/complete', async (req, res, next) => {
+  try {
+    const reminder = await findOwned(req, res);
+    if (!reminder) return undefined;
 
-  return router;
-};
+    if (!reminder.isCompleted) {
+      reminder.isCompleted = true;
+      reminder.completionDate = new Date();
+      reminder.snoozeUntil = null;
+      await reminder.save();
+    }
+    const nextReminder = await scheduleNext(reminder);
+    return res.json({ reminder, next: nextReminder });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+router.post('/:id/undo', async (req, res, next) => {
+  try {
+    const reminder = await findOwned(req, res);
+    if (!reminder) return undefined;
+    reminder.isCompleted = false;
+    reminder.completionDate = undefined;
+    await reminder.save();
+    return res.json(reminder);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+router.post('/:id/snooze', async (req, res, next) => {
+  try {
+    const minutes = Number(req.body.minutes);
+    if (!Number.isFinite(minutes) || minutes < 1 || minutes > MAX_SNOOZE_MINUTES) {
+      return res.status(400).json({ error: 'זמן דחייה לא תקין' });
+    }
+    const reminder = await findOwned(req, res);
+    if (!reminder) return undefined;
+
+    reminder.snoozeUntil = new Date(Date.now() + minutes * 60 * 1000);
+    await reminder.save();
+    return res.json(reminder);
+  } catch (err) {
+    return next(err);
+  }
+});
+
+router.delete('/:id', async (req, res, next) => {
+  try {
+    const reminder = await findOwned(req, res);
+    if (!reminder) return undefined;
+
+    await reminder.deleteOne();
+    // Recurring copies share the recording, so only delete the file when it is no longer used.
+    const fileName = reminder.recordedTaskAudioFileName;
+    if (fileName && !(await Reminder.exists({ recordedTaskAudioFileName: fileName }))) {
+      removeUpload(fileName);
+    }
+    return res.json({ ok: true });
+  } catch (err) {
+    return next(err);
+  }
+});
+
+module.exports = router;

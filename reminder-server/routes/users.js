@@ -1,129 +1,92 @@
 const express = require('express');
-const router = express.Router();
-const bcrypt = require('bcrypt');
-const multer = require('multer');
 const User = require('../models/User');
+const { requireAuth } = require('../middleware/auth');
+const { memoryUpload } = require('../middleware/upload');
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage: storage });
+const router = express.Router();
+router.use(requireAuth);
 
-// Register route
-router.post('/register', async (req, res) => {
+const PREDEFINED_SOUNDS = ['reminder.wav', 'reminder1.wav', 'reminder2.wav', 'reminder3.wav', 'blobbell.wav', 'blobre3.wav'];
+const TEXT_FIELDS = { fullName: 100, phone: 30, notes: 2000, caregiverName: 100, caregiverPhone: 30 };
+
+async function loadUser(req, res) {
+  const user = await User.findById(req.userId);
+  if (!user) res.status(404).json({ error: 'המשתמש לא נמצא' });
+  return user;
+}
+
+router.get('/me', async (req, res, next) => {
   try {
-    const { username, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({ username, password: hashedPassword });
-    await newUser.save();
-    res.status(201).json(newUser);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+    const user = await loadUser(req, res);
+    if (user) res.json(user.toPublic());
+  } catch (err) {
+    next(err);
   }
 });
 
-// Login route
-router.post('/login', async (req, res) => {
+router.put('/me', async (req, res, next) => {
   try {
-    const { username, password } = req.body;
-    const user = await User.findOne({ username });
-    if (user && await bcrypt.compare(password, user.password)) {
-      res.status(200).json(user);
-    } else {
-      res.status(400).json({ error: 'Invalid credentials' });
-    }
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-router.put('/updateAudioForUser/:username', upload.single('audioFile'), async (req, res) => {
-  try {
-    const { username } = req.params;
-    let updateData = {};
+    const user = await loadUser(req, res);
+    if (!user) return undefined;
 
-    if (req.file) {
-      // אם המשתמש העלה קובץ אודיו
-      updateData = {
-        audioContentType: req.file.mimetype,
-        audioData: req.file.buffer, // שמירת הקובץ בפורמט בינארי
-      };
-      console.log(`Audio file uploaded for user ${username}:`, req.file.originalname);
-    } else if (req.body.selectedAudio) {
-      // אם המשתמש בחר קובץ מוגדר מראש
-      updateData = {
-        audioContentType: 'predefined', // סוג הצליל יהיה "predefined"
-        audioData: req.body.selectedAudio, // שמירת שם הקובץ כטקסט ולא כנתונים בינאריים
-      };
-      console.log(`Predefined audio selected for user ${username}:`, req.body.selectedAudio);
-    }
+    Object.entries(TEXT_FIELDS).forEach(([field, max]) => {
+      if (typeof req.body[field] === 'string') user[field] = req.body[field].trim().slice(0, max);
+    });
 
-    console.log(`Updating user ${username} with data:`, updateData);
-
-    const updatedUser = await User.findOneAndUpdate({ username }, updateData, { new: true });
-
-    if (!updatedUser) {
-      return res.status(404).send('User not found');
-    }
-
-    res.status(200).json({ message: 'User audio settings updated successfully' });
-  } catch (error) {
-    console.error('Error updating audio settings:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-
-
-// בשרת users.js
-router.get('/:username/audio', async (req, res) => {
-  try {
-    const { username } = req.params;
-    const user = await User.findOne({ username });
-
-    if (!user) {
-      return res.status(404).send('User not found');
-    }
-
-    if (!user.audioData || !user.audioContentType) {
-      return res.status(404).send('Audio not found');
-    }
-
-    res.set('Content-Type', user.audioContentType);
-    res.send(user.audioData);
-  } catch (error) {
-    console.error('Error fetching audio data:', error);
-    res.status(500).json({ error: 'Error fetching audio data' });
-  }
-});
-
-
-const PROFILE_FIELDS = 'username fullName phone notes caregiverName caregiverPhone infoItems';
-
-// Get the user's personal info (never returns password or audio data)
-router.get('/:id/profile', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id).select(PROFILE_FIELDS);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Update the user's personal info
-router.put('/:id/profile', async (req, res) => {
-  try {
-    const { fullName, phone, notes, caregiverName, caregiverPhone, infoItems } = req.body;
-    const update = { fullName, phone, notes, caregiverName, caregiverPhone };
-    if (Array.isArray(infoItems)) {
-      update.infoItems = infoItems
-        .map((item) => ({ label: String(item.label || '').trim(), value: String(item.value || '').trim() }))
+    if (Array.isArray(req.body.infoItems)) {
+      user.infoItems = req.body.infoItems
+        .slice(0, 50)
+        .map((item) => ({
+          label: String(item?.label || '').trim().slice(0, 100),
+          value: String(item?.value || '').trim().slice(0, 500),
+        }))
         .filter((item) => item.label || item.value);
     }
-    Object.keys(update).forEach((k) => update[k] === undefined && delete update[k]);
-    const user = await User.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).select(PROFILE_FIELDS);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(400).json({ error: error.message });
+
+    if (req.body.soundName !== undefined) {
+      const { soundName } = req.body;
+      if (soundName === 'custom' && !user.toPublic().hasCustomSound) {
+        return res.status(400).json({ error: 'עדיין לא הועלה צליל אישי' });
+      }
+      if (soundName !== 'custom' && !PREDEFINED_SOUNDS.includes(soundName)) {
+        return res.status(400).json({ error: 'צליל לא מוכר' });
+      }
+      user.soundName = soundName;
+    }
+
+    await user.save();
+    return res.json(user.toPublic());
+  } catch (err) {
+    return next(err);
+  }
+});
+
+// Upload a personal reminder sound (e.g. a family member's voice).
+router.post('/me/sound', memoryUpload.single('sound'), async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'לא נבחר קובץ' });
+    const user = await loadUser(req, res);
+    if (!user) return undefined;
+
+    user.audioData = req.file.buffer;
+    user.audioContentType = req.file.mimetype;
+    user.soundName = 'custom';
+    await user.save();
+    return res.json(user.toPublic());
+  } catch (err) {
+    return next(err);
+  }
+});
+
+router.get('/me/sound', async (req, res, next) => {
+  try {
+    const user = await loadUser(req, res);
+    if (!user) return undefined;
+    if (!user.toPublic().hasCustomSound) return res.status(404).json({ error: 'אין צליל אישי' });
+    res.set('Content-Type', user.audioContentType);
+    return res.send(user.audioData);
+  } catch (err) {
+    return next(err);
   }
 });
 
