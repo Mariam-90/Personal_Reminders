@@ -7,7 +7,7 @@ import NavBar from './NavBar';
 import ReminderTable from './ReminderTable';
 import StatusView from './StatusView';
 import CompletedTasksView from './CompletedTasksView';
-import AudioSettings from './AudioSettings';
+import Profile from './Profile';
 import AudioPlayer from './AudioPlayer';
 import './MainApp.css';
 function MainApp() {
@@ -189,7 +189,6 @@ function MainApp() {
     const audioToUse = customAudio ? URL.createObjectURL(customAudio) : selectedAudio;
     setSelectedAudio(audioToUse);
     localStorage.setItem('selectedAudio', audioToUse);
-    alert('הבחירה נשמרה בהצלחה!');
   };
 
   // Handle navigation clicks
@@ -224,11 +223,11 @@ function MainApp() {
       ) : (
         <div>
           <NavBar onNavClick={handleNavClick} activeView={view} />
-          <AudioSettings username={user.username} onSave={handleAudioSettingsSave} />
           {view === 'add' && <AddReminder userId={user._id} onAdd={addReminder} />}
           {view === 'view' && <ReminderTable reminders={reminders} onComplete={completeReminder} fetchReminders={fetchReminders} />}
           {view === 'status' && <StatusView reminders={reminders} />}
           {view === 'completed' && <CompletedTasksView reminders={reminders} />}
+          {view === 'profile' && <Profile user={user} onAudioSave={handleAudioSettingsSave} />}
 
           <AudioPlayer ref={alertAudioRef} username={user.username} />
           <AudioPlayer ref={reminderAudioRef} username={user.username} />

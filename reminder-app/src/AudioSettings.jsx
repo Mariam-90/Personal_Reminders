@@ -13,6 +13,11 @@ const AudioSettings = ({ username, onSave }) => {
     setCustomAudio(event.target.files[0]);
   };
 
+  const handlePreview = () => {
+    const audio = new Audio(`${process.env.PUBLIC_URL}/${selectedAudio}`);
+    audio.play().catch((err) => console.error('Preview failed:', err));
+  };
+
   const handleSave = async () => {
     try {
       const formData = new FormData();
@@ -48,15 +53,14 @@ const AudioSettings = ({ username, onSave }) => {
     <div>
       <h2>בחר צליל עבור כל התזכורות שלך</h2>
       <select value={selectedAudio} onChange={handleAudioChange}>
-        <option value="reminder.wav">צליל ברירת מחדל</option>
-        <option value="reminder1.wav">Beep</option>
-        <option value="reminder2.wav">Alert</option>
-        <option value="reminder3.wav">Chime</option>
-        <option value="blobbell.wav">Chime</option>
-        <option value="blobre3.wav">Chime</option>
-        
+        <option value="reminder.wav">ברירת מחדל</option>
+        <option value="reminder1.wav">ביפ</option>
+        <option value="reminder2.wav">התראה</option>
+        <option value="reminder3.wav">צלצול</option>
+        <option value="blobbell.wav">פעמון</option>
+        <option value="blobre3.wav">טינג</option>
       </select>
-      
+      <button type="button" className="preview-btn" onClick={handlePreview} title="האזנה לצליל">▶ האזן</button>
       <button onClick={handleSave}>שמור בחירות</button>
     </div>
   );

@@ -38,10 +38,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // MongoDB connection
-mongoose.connect('mongodb+srv://mariaab:zbAbCaEnD7aVLERS@cluster0.27uaqyf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/reminders').then(() => {
   console.log('Connected to MongoDB');
 }).catch((error) => {
   console.error('Connection error:', error.message);

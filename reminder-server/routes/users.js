@@ -95,4 +95,36 @@ router.get('/:username/audio', async (req, res) => {
 });
 
 
+const PROFILE_FIELDS = 'username fullName phone notes caregiverName caregiverPhone infoItems';
+
+// Get the user's personal info (never returns password or audio data)
+router.get('/:id/profile', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select(PROFILE_FIELDS);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Update the user's personal info
+router.put('/:id/profile', async (req, res) => {
+  try {
+    const { fullName, phone, notes, caregiverName, caregiverPhone, infoItems } = req.body;
+    const update = { fullName, phone, notes, caregiverName, caregiverPhone };
+    if (Array.isArray(infoItems)) {
+      update.infoItems = infoItems
+        .map((item) => ({ label: String(item.label || '').trim(), value: String(item.value || '').trim() }))
+        .filter((item) => item.label || item.value);
+    }
+    Object.keys(update).forEach((k) => update[k] === undefined && delete update[k]);
+    const user = await User.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true }).select(PROFILE_FIELDS);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
 module.exports = router;

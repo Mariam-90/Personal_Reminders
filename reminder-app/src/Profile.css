@@ -1,0 +1,100 @@
+.profile-page {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 0 16px 60px;
+  box-sizing: border-box;
+}
+.profile-hello {
+  text-align: center;
+  font-size: 1.2em;
+  color: inherit !important;
+  margin-top: -10px;
+}
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: none !important;
+  width: auto !important;
+  margin: 20px 0 !important;
+  padding: 24px !important;
+  box-sizing: border-box;
+}
+.profile-card h3 {
+  margin: 8px 0 0;
+  font-size: 1.25em;
+}
+.profile-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+}
+.profile-card input[type="text"],
+.profile-card input[type="tel"],
+.profile-card textarea {
+  width: 100%;
+  box-sizing: border-box;
+  max-width: none;
+  margin: 0;
+  padding: 12px 14px;
+  font-size: 1em;
+  font-family: inherit;
+}
+.profile-card textarea {
+  resize: vertical;
+}
+.info-row {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr auto;
+  gap: 8px;
+  align-items: center;
+}
+.profile-card .info-row input {
+  margin: 0;
+}
+.profile-empty {
+  color: #a9a0c4 !important;
+  margin: 0;
+}
+.profile-card button {
+  padding: 12px 18px;
+  font-size: 1em;
+}
+.profile-card .remove-btn {
+  padding: 10px 14px;
+}
+.profile-card .save-btn {
+  margin-top: 8px;
+  font-size: 1.1em;
+}
+.profile-message {
+  text-align: center;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+.profile-message.ok { background: rgba(52, 211, 153, 0.18); color: #34d399; }
+.profile-message.error { background: rgba(251, 113, 133, 0.18); color: #fb7185; }
+.toggle-row {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 12px !important;
+  cursor: pointer;
+}
+.toggle-row input {
+  width: 26px;
+  height: 26px;
+  margin: 0;
+}
+.profile-card .preview-btn { margin: 0; }
+.profile-card select { margin: 0; width: 100%; box-sizing: border-box; }
+
+/* accessibility toggle */
+body.large-text { font-size: 1.25em; }
+body.large-text nav.navbar ul li { font-size: 1.1em; }
+body.large-text table { font-size: 1.15em; }
+@media (max-width: 560px) {
+  .info-row { grid-template-columns: 1fr; }
+}
