@@ -14,6 +14,7 @@ router.use(
     standardHeaders: 'draft-7',
     legacyHeaders: false,
     message: { error: 'יותר מדי ניסיונות, נסו שוב בעוד כמה דקות' },
+    skip: () => process.env.NODE_ENV === 'test',
   })
 );
 
