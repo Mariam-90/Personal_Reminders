@@ -1,13 +1,57 @@
 import React from 'react';
-import './App.css';  // ייבוא קובץ ה-CSS
-import MainApp from './MainApp';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
+import { RemindersProvider } from './context/RemindersContext';
+import useHashRoute from './hooks/useHashRoute';
+import Shell, { NAV_ITEMS } from './components/Shell';
+import AuthPage from './pages/AuthPage';
 
-function App() {
+const ROUTES = NAV_ITEMS.map((n) => n.id);
+
+const PAGES = {};
+
+function ComingSoon() {
   return (
-    <div className="App">
-      <MainApp />
-    </div>
+    <section className="page">
+      <div className="card empty">
+        <div className="empty-emoji">🛠️</div>
+        <h3>בקרוב</h3>
+      </div>
+    </section>
   );
 }
 
-export default App;
+function SignedInApp() {
+  const [route, navigate] = useHashRoute(ROUTES, 'today');
+  const Page = PAGES[route] || ComingSoon;
+
+  return (
+    <RemindersProvider>
+      <Shell route={route} navigate={navigate}>
+        <Page navigate={navigate} />
+      </Shell>
+    </RemindersProvider>
+  );
+}
+
+function Root() {
+  const { user, status } = useAuth();
+  if (status === 'loading') {
+    return (
+      <div className="splash">
+        <div className="spinner" role="status" aria-label="טוען" />
+      </div>
+    );
+  }
+  return user ? <SignedInApp /> : <AuthPage />;
+}
+
+export default function App() {
+  return (
+    <ToastProvider>
+      <AuthProvider>
+        <Root />
+      </AuthProvider>
+    </ToastProvider>
+  );
+}
