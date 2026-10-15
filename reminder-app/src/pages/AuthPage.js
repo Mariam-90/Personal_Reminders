@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
-import LanguagePicker from '../components/LanguagePicker';
+import LanguageMenu from '../components/LanguageMenu';
 import { errorMessage } from '../lib/api';
 
 export default function AuthPage() {
@@ -43,10 +43,10 @@ export default function AuthPage() {
 
   return (
     <main className="auth">
+      <div className="auth-lang">
+        <LanguageMenu />
+      </div>
       <div className="auth-card">
-        <div className="auth-lang">
-          <LanguagePicker />
-        </div>
         <div className="auth-hero">
           <div className="brand-logo" aria-hidden="true">🔔</div>
           <h1>

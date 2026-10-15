@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../context/I18nContext';
 import { hasCaregiver, telLink } from '../lib/caregiver';
+import LanguageMenu from './LanguageMenu';
 
 export const NAV_ITEMS = [
   { id: 'today', icon: '🏠' },
@@ -44,6 +45,7 @@ export default function Shell({ route, navigate, children }) {
             📞 <span>{user.caregiverName ? t('header.callTo', { name: user.caregiverName }) : t('header.callHelp')}</span>
           </a>
         )}
+        <LanguageMenu />
         <button type="button" className="icon-btn" onClick={logout} title={t('header.logout')} aria-label={t('header.logout')}>
           🚪
         </button>
