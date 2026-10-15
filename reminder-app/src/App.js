@@ -9,6 +9,8 @@ import AuthPage from './pages/AuthPage';
 import TodayPage from './pages/TodayPage';
 import AddReminderPage from './pages/AddReminderPage';
 import RemindersPage from './pages/RemindersPage';
+import HistoryPage from './pages/HistoryPage';
+import ProfilePage from './pages/ProfilePage';
 
 const ROUTES = NAV_ITEMS.map((n) => n.id);
 
@@ -16,22 +18,13 @@ const PAGES = {
   today: TodayPage,
   add: AddReminderPage,
   reminders: RemindersPage,
+  history: HistoryPage,
+  profile: ProfilePage,
 };
-
-function ComingSoon() {
-  return (
-    <section className="page">
-      <div className="card empty">
-        <div className="empty-emoji">🛠️</div>
-        <h3>בקרוב</h3>
-      </div>
-    </section>
-  );
-}
 
 function SignedInApp() {
   const [route, navigate] = useHashRoute(ROUTES, 'today');
-  const Page = PAGES[route] || ComingSoon;
+  const Page = PAGES[route];
 
   return (
     <RemindersProvider>
