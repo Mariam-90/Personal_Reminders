@@ -1,50 +1,50 @@
-# 🔔 התזכורות שלי – Personal Reminders
+# 🔔 Personal Reminders
 
-אפליקציית תזכורות פשוטה וברורה, שנבנתה במיוחד עבור **אנשים מבוגרים** ועבור **מי שזקוק לעזרה בזכירת משימות יומיומיות** – תרופות, שתייה, ארוחות, תורים לרופא ועוד.
+A simple, clear reminder app built for **older adults** and for **anyone who needs help remembering everyday tasks**: medication, drinking water, meals, doctor appointments and more.
 
-כתב גדול, כפתורים גדולים, תזכורת על כל המסך עם צליל והקראה בקול, ואפשרות לפנות מהר לבן משפחה או למטפל.
+Large text, large buttons, a full-screen alert with sound and read-aloud, and a quick way to reach a family member or caregiver.
 
-## ✨ מה יש באפליקציה
+## ✨ Features
 
 | | |
 |---|---|
-| 🏠 **מסך "היום"** | ברכה ושעון גדול, כרטיס "מה עכשיו" עם כפתור ענק *עשיתי*, דחייה ב-10 דקות והקראה בקול, התוכנית להיום וטבעת התקדמות |
-| ⏰ **התראה על כל המסך** | בזמן התזכורת: צליל + הקראת המשימה בעברית (או הקלטה אישית), חוזרת עד שמגיבים. התראה מקדימה 15 דקות לפני, והתראות דפדפן כשהחלון ברקע |
-| ➕ **הוספה בשלושה צעדים** | 8 תבניות בלחיצה (💊 תרופה, 💧 שתייה, 🍽️ ארוחה…), הכתבה קולית, זמנים מהירים ("בעוד שעה", "מחר 09:00"), חזרה יומית/שבועית/חודשית והקלטה קולית |
-| 📋 **רשימת תזכורות** | חיפוש, סינון וקיבוץ לפי ימים; עריכה ומחיקה עם אישור |
-| 📈 **היסטוריה** | אחוז הצלחה שבועי, רצף ימים, גרף של 7 ימים ורשימות "בוצעו" / "פוספסו" |
-| 🤝 **איש קשר / מטפל** | כפתור חיוג מהיר בכותרת, והודעת וואטסאפ מוכנה כשמפספסים תזכורת |
-| 👤 **פרופיל** | פרטים אישיים, מידע חשוב (תרופות, אלרגיות), שורות מידע חופשיות, בחירת צליל עם האזנה מקדימה, העלאת צליל אישי |
-| 🌐 **3 שפות** | עברית, العربية ו-English – כולל כיוון (RTL/LTR), תאריכים ושעות, הקראה בקול והכתבה בשפה הנבחרת |
-| 👓 **נגישות** | מצב טקסט גדול, ניגודיות גבוהה, RTL מלא, תמיכה בקורא מסך ובמקלדת, מותאם לטלפון |
+| 🏠 **Today screen** | Greeting and a large clock, a "what's next" card with a big *Done* button, 10-minute snooze and read-aloud, today's plan and a progress ring |
+| ⏰ **Full-screen alert** | At reminder time: a sound plus the task read aloud (or a personal recording), repeated until the user responds. A heads-up 15 minutes before, and browser notifications when the window is in the background |
+| ➕ **Add in three steps** | 8 one-tap templates (💊 medicine, 💧 drink, 🍽️ meal…), voice dictation, quick times ("in an hour", "tomorrow 09:00"), daily / weekly / monthly repeat, and a voice recording |
+| 📋 **Reminders list** | Search, filters and grouping by day; edit, and delete with confirmation |
+| 📈 **History** | Weekly success rate, day streak, a 7-day chart, and "done" / "missed" lists |
+| 🤝 **Caregiver contact** | Quick-call button in the header, and a ready-made WhatsApp message when a reminder is missed |
+| 👤 **Profile** | Personal details, important information (medication, allergies), free-form info rows, sound picker with preview, upload of a personal sound |
+| 🌐 **3 languages** | Hebrew, Arabic and English, including direction (RTL/LTR), dates and times, read-aloud and dictation in the selected language |
+| 👓 **Accessibility** | Large-text mode, high contrast, full RTL, screen-reader and keyboard support, mobile friendly |
 
-## 🧱 טכנולוגיות
+## 🧱 Tech stack
 
-- **Client:** React 18, Axios, CSS (design system אחד, ללא ספריות UI)
+- **Client:** React 18, Axios, plain CSS (a single design system, no UI library)
 - **Server:** Node.js, Express, MongoDB (Mongoose), JWT, bcrypt, Multer, Helmet
 
-## 🚀 הרצה מקומית
+## 🚀 Running locally
 
-דרישות: Node.js 18+ ו-MongoDB (מקומי או Atlas).
+Requirements: Node.js 18+ and MongoDB (local or Atlas).
 
-**1. שרת**
+**1. Server**
 
 ```bash
 cd reminder-server
 npm install
-cp .env.example .env   # ולמלא JWT_SECRET
+cp .env.example .env   # then fill in JWT_SECRET
 npm run dev
 ```
 
-ליצירת `JWT_SECRET`:
+To generate a `JWT_SECRET`:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-השרת עולה על http://localhost:5001 (בדיקה: http://localhost:5001/api/health).
+The server runs on http://localhost:5001 (health check: http://localhost:5001/api/health).
 
-**2. אפליקציה**
+**2. App**
 
 ```bash
 cd reminder-app
@@ -52,39 +52,44 @@ npm install
 npm start
 ```
 
-האפליקציה נפתחת על http://localhost:3000.
+The app opens on http://localhost:3000.
 
-## 🧪 בדיקות
+## 🧪 Tests
 
 ```bash
 cd reminder-app && npm test
 cd reminder-server && npm test
 ```
 
+- **Server** (`node:test` + `supertest` + a throwaway in-memory MongoDB, so your real database is never touched): sign-up and login, route protection, isolation between users, create / edit / snooze / complete / delete, recurring reminders, file uploads, profile and sounds.
+- **App** (Jest + Testing Library): time formatting, reminder status, statistics, caregiver links, the login screen, and translations (all three languages have the same keys and placeholders).
+- **CI:** GitHub Actions runs all tests and the production build on every push to `main` and on every pull request.
+
 ## 🔌 API
 
-כל הנתיבים (מלבד `auth`) דורשים `Authorization: Bearer <token>`.
+Every route except `auth` requires `Authorization: Bearer <token>`.
+Errors are returned as `{ error, code }`: the client translates `code`, and `error` is an English fallback.
 
-| שיטה | נתיב | תיאור |
+| Method | Route | Description |
 |---|---|---|
-| POST | `/api/auth/register` | הרשמה → `{ token, user }` |
-| POST | `/api/auth/login` | כניסה → `{ token, user }` |
-| GET / PUT | `/api/users/me` | קריאה / עדכון פרופיל וצליל |
-| GET / POST | `/api/users/me/sound` | צליל אישי (multipart: `sound`) |
-| GET | `/api/reminders` | כל התזכורות של המשתמש |
-| POST | `/api/reminders` | יצירה (multipart: `task`, `executionDate`, `recurrence`, `category`, `recording`) |
-| PATCH | `/api/reminders/:id` | עריכה |
-| POST | `/api/reminders/:id/complete` | סימון כבוצע (ויצירת המופע הבא בתזכורת חוזרת) |
-| POST | `/api/reminders/:id/undo` | ביטול סימון |
-| POST | `/api/reminders/:id/snooze` | דחייה `{ minutes }` |
-| DELETE | `/api/reminders/:id` | מחיקה |
+| POST | `/api/auth/register` | Sign up → `{ token, user }` |
+| POST | `/api/auth/login` | Log in → `{ token, user }` |
+| GET / PUT | `/api/users/me` | Read / update the profile and sound |
+| GET / POST | `/api/users/me/sound` | Personal sound (multipart: `sound`) |
+| GET | `/api/reminders` | All of the user's reminders |
+| POST | `/api/reminders` | Create (multipart: `task`, `executionDate`, `recurrence`, `category`, `recording`) |
+| PATCH | `/api/reminders/:id` | Edit |
+| POST | `/api/reminders/:id/complete` | Mark as done (and create the next occurrence of a recurring reminder) |
+| POST | `/api/reminders/:id/undo` | Undo "done" |
+| POST | `/api/reminders/:id/snooze` | Snooze `{ minutes }` |
+| DELETE | `/api/reminders/:id` | Delete |
 
-## 📁 מבנה
+## 📁 Project structure
 
 ```
 reminder-app/src
 ├── pages/        Today · Add · Reminders · History · Profile · Auth
-├── components/   Shell, AlertEngine, ReminderCard, Modal…
+├── components/   Shell, AlertEngine, ReminderCard, Modal, LanguageMenu…
 ├── context/      Auth, I18n, Reminders, Toast
 ├── i18n/         he · ar · en dictionaries + t()
 ├── hooks/        useNow, useRecorder, useDictation, usePreferences…
@@ -94,12 +99,8 @@ reminder-server
 ├── routes/       auth, users, reminders
 ├── models/       User, Reminder
 ├── middleware/   auth (JWT), upload
-├── lib/          recurrence
-└── server.js
+├── lib/          recurrence, errors
+├── test/         API and unit tests
+├── app.js        Express app
+└── server.js     DB connection + listen
 ```
-
-### מה נבדק
-
-- **שרת** (`node:test` + `supertest` + MongoDB זמני בזיכרון – ה-DB האמיתי לא נוגע): הרשמה וכניסה, הגנה על נתיבים, הפרדה בין משתמשים, יצירה / עריכה / דחייה / השלמה / מחיקה, תזכורות חוזרות, העלאת קבצים, פרופיל וצלילים.
-- **אפליקציה** (Jest + Testing Library): חישובי זמן בעברית, סטטוס תזכורת, סטטיסטיקות, קישורי איש קשר ומסך הכניסה.
-- **CI:** GitHub Actions מריץ את כל הבדיקות וה-build בכל push ל-`main` ובכל Pull Request.
