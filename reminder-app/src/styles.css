@@ -917,3 +917,24 @@ audio { max-width: 100%; height: 44px; }
 @media (min-width: 900px) {
   .toasts { top: auto; bottom: 24px; }
 }
+
+@media (max-width: 560px) {
+  .brand > span:last-child { display: none; }
+  .r-card { flex-wrap: wrap; }
+  .r-body { flex-basis: calc(100% - 130px); }
+  .r-actions { width: 100%; justify-content: flex-end; }
+  .r-actions .icon-btn { width: 44px; height: 44px; }
+}
+
+@media (max-width: 899px) {
+  /* no backdrop-filter here: it would trap the fixed bottom nav inside the header */
+  .topbar {
+    background: rgba(12, 8, 24, 0.94);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+}
+@media (max-width: 560px) {
+  .sos-card { flex-wrap: wrap; }
+  .sos-card .sos-text { flex-basis: calc(100% - 60px); }
+}
