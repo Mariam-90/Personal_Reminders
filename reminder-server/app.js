@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const config = require('./config');
 const { uploadDir } = require('./middleware/upload');
+const { apiError } = require('./lib/errors');
 
 const app = express();
 
@@ -22,19 +23,22 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/reminders', require('./routes/reminders'));
 
-app.use('/api', (req, res) => res.status(404).json({ error: 'Not found' }));
+app.use('/api', (req, res) => res.status(404).json(apiError('notFound')));
 
 // Central error handler: multer limits, mongoose validation, everything else.
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   if (err.code === 'LIMIT_FILE_SIZE') {
-    return res.status(413).json({ error: 'הקובץ גדול מדי (עד 5MB)' });
+    return res.status(413).json(apiError('fileTooLarge'));
   }
-  if (err.name === 'ValidationError' || err.status === 400) {
-    return res.status(400).json({ error: err.message });
+  if (err.status === 400 && err.code) {
+    return res.status(400).json(apiError(err.code));
+  }
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ ...apiError('validation'), error: err.message });
   }
   console.error(err);
-  return res.status(500).json({ error: 'שגיאה בשרת, נסו שוב' });
+  return res.status(500).json(apiError('serverError'));
 });
 
 module.exports = app;

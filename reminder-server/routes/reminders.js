@@ -4,33 +4,34 @@ const Reminder = require('../models/Reminder');
 const { requireAuth } = require('../middleware/auth');
 const { diskUpload, removeUpload } = require('../middleware/upload');
 const { scheduleNext, rollOverDue } = require('../lib/recurrence');
+const { apiError } = require('../lib/errors');
 
 const router = express.Router();
 router.use(requireAuth);
 
 const MAX_SNOOZE_MINUTES = 24 * 60;
 
-// Validates the editable fields; returns { data } or { error }.
+// Validates the editable fields; returns { data } or { error: <error code> }.
 function parseReminderInput(body, { partial = false } = {}) {
   const data = {};
 
   if (body.task !== undefined || !partial) {
     const task = String(body.task || '').trim();
-    if (!task) return { error: 'יש לכתוב מה צריך לעשות' };
-    if (task.length > 200) return { error: 'תיאור המשימה ארוך מדי' };
+    if (!task) return { error: 'taskRequired' };
+    if (task.length > 200) return { error: 'taskTooLong' };
     data.task = task;
   }
 
   if (body.executionDate !== undefined || !partial) {
     const executionDate = new Date(body.executionDate);
     if (!body.executionDate || Number.isNaN(executionDate.getTime())) {
-      return { error: 'יש לבחור תאריך ושעה תקינים' };
+      return { error: 'dateInvalid' };
     }
     data.executionDate = executionDate;
   }
 
   if (body.recurrence !== undefined) {
-    if (!Reminder.RECURRENCES.includes(body.recurrence)) return { error: 'סוג חזרה לא תקין' };
+    if (!Reminder.RECURRENCES.includes(body.recurrence)) return { error: 'recurrenceInvalid' };
     data.recurrence = body.recurrence;
   }
 
@@ -44,11 +45,11 @@ function parseReminderInput(body, { partial = false } = {}) {
 // Loads a reminder that belongs to the logged-in user, or answers 404.
 async function findOwned(req, res) {
   if (!mongoose.isValidObjectId(req.params.id)) {
-    res.status(404).json({ error: 'התזכורת לא נמצאה' });
+    res.status(404).json(apiError('reminderNotFound'));
     return null;
   }
   const reminder = await Reminder.findOne({ _id: req.params.id, userId: req.userId });
-  if (!reminder) res.status(404).json({ error: 'התזכורת לא נמצאה' });
+  if (!reminder) res.status(404).json(apiError('reminderNotFound'));
   return reminder;
 }
 
@@ -67,7 +68,7 @@ router.post('/', diskUpload.single('recording'), async (req, res, next) => {
     const { data, error } = parseReminderInput(req.body);
     if (error) {
       removeUpload(req.file?.filename);
-      return res.status(400).json({ error });
+      return res.status(400).json(apiError(error));
     }
     const reminder = await Reminder.create({
       ...data,
@@ -87,7 +88,7 @@ router.patch('/:id', async (req, res, next) => {
     if (!reminder) return undefined;
 
     const { data, error } = parseReminderInput(req.body, { partial: true });
-    if (error) return res.status(400).json({ error });
+    if (error) return res.status(400).json(apiError(error));
 
     Object.assign(reminder, data);
     if (data.executionDate) reminder.snoozeUntil = null;
@@ -133,7 +134,7 @@ router.post('/:id/snooze', async (req, res, next) => {
   try {
     const minutes = Number(req.body.minutes);
     if (!Number.isFinite(minutes) || minutes < 1 || minutes > MAX_SNOOZE_MINUTES) {
-      return res.status(400).json({ error: 'זמן דחייה לא תקין' });
+      return res.status(400).json(apiError('snoozeInvalid'));
     }
     const reminder = await findOwned(req, res);
     if (!reminder) return undefined;

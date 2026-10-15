@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
 const { signToken } = require('../middleware/auth');
+const { apiError } = require('../lib/errors');
 
 const router = express.Router();
 
@@ -13,7 +14,7 @@ router.use(
     limit: 30,
     standardHeaders: 'draft-7',
     legacyHeaders: false,
-    message: { error: 'יותר מדי ניסיונות, נסו שוב בעוד כמה דקות' },
+    message: apiError('tooManyAttempts'),
     skip: () => process.env.NODE_ENV === 'test',
   })
 );
@@ -27,13 +28,13 @@ router.post('/register', async (req, res, next) => {
     const fullName = String(req.body.fullName || '').trim().slice(0, 100);
 
     if (!USERNAME_RE.test(username)) {
-      return res.status(400).json({ error: 'שם משתמש: 3-30 תווים, אותיות ומספרים בלבד' });
+      return res.status(400).json(apiError('usernameInvalid'));
     }
     if (password.length < 6) {
-      return res.status(400).json({ error: 'הסיסמה חייבת להכיל לפחות 6 תווים' });
+      return res.status(400).json(apiError('passwordShort'));
     }
     if (await User.exists({ username })) {
-      return res.status(409).json({ error: 'שם המשתמש כבר תפוס' });
+      return res.status(409).json(apiError('usernameTaken'));
     }
 
     const user = await User.create({ username, fullName, password: await bcrypt.hash(password, 10) });
@@ -50,7 +51,7 @@ router.post('/login', async (req, res, next) => {
     const user = await User.findOne({ username });
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(401).json({ error: 'שם משתמש או סיסמה שגויים' });
+      return res.status(401).json(apiError('badCredentials'));
     }
     return res.json({ token: signToken(user), user: user.toPublic() });
   } catch (err) {

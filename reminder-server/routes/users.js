@@ -2,6 +2,7 @@ const express = require('express');
 const User = require('../models/User');
 const { requireAuth } = require('../middleware/auth');
 const { memoryUpload } = require('../middleware/upload');
+const { apiError } = require('../lib/errors');
 
 const router = express.Router();
 router.use(requireAuth);
@@ -11,7 +12,7 @@ const TEXT_FIELDS = { fullName: 100, phone: 30, notes: 2000, caregiverName: 100,
 
 async function loadUser(req, res) {
   const user = await User.findById(req.userId);
-  if (!user) res.status(404).json({ error: 'המשתמש לא נמצא' });
+  if (!user) res.status(404).json(apiError('userNotFound'));
   return user;
 }
 
@@ -46,10 +47,10 @@ router.put('/me', async (req, res, next) => {
     if (req.body.soundName !== undefined) {
       const { soundName } = req.body;
       if (soundName === 'custom' && !user.toPublic().hasCustomSound) {
-        return res.status(400).json({ error: 'עדיין לא הועלה צליל אישי' });
+        return res.status(400).json(apiError('noCustomSound'));
       }
       if (soundName !== 'custom' && !PREDEFINED_SOUNDS.includes(soundName)) {
-        return res.status(400).json({ error: 'צליל לא מוכר' });
+        return res.status(400).json(apiError('unknownSound'));
       }
       user.soundName = soundName;
     }
@@ -64,7 +65,7 @@ router.put('/me', async (req, res, next) => {
 // Upload a personal reminder sound (e.g. a family member's voice).
 router.post('/me/sound', memoryUpload.single('sound'), async (req, res, next) => {
   try {
-    if (!req.file) return res.status(400).json({ error: 'לא נבחר קובץ' });
+    if (!req.file) return res.status(400).json(apiError('noFile'));
     const user = await loadUser(req, res);
     if (!user) return undefined;
 
@@ -82,7 +83,7 @@ router.get('/me/sound', async (req, res, next) => {
   try {
     const user = await loadUser(req, res);
     if (!user) return undefined;
-    if (!user.toPublic().hasCustomSound) return res.status(404).json({ error: 'אין צליל אישי' });
+    if (!user.toPublic().hasCustomSound) return res.status(404).json(apiError('noCustomSound'));
     res.set('Content-Type', user.audioContentType);
     return res.send(user.audioData);
   } catch (err) {

@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const { maxUploadBytes } = require('../config');
+const { httpError } = require('../lib/errors');
 
 const uploadDir = path.join(__dirname, '..', 'uploads');
 if (!fs.existsSync(uploadDir)) {
@@ -11,9 +12,7 @@ if (!fs.existsSync(uploadDir)) {
 
 const audioOnly = (req, file, cb) => {
   if (file.mimetype && file.mimetype.startsWith('audio/')) return cb(null, true);
-  const err = new Error('ניתן להעלות קבצי שמע בלבד');
-  err.status = 400;
-  return cb(err);
+  return cb(httpError(400, 'audioOnly'));
 };
 
 const EXTENSIONS = {

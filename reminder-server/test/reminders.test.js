@@ -25,7 +25,9 @@ describe('reminders', () => {
   });
 
   it('validates input', async () => {
-    assert.strictEqual((await create({ task: '', executionDate: minutesFromNow(5) })).status, 400);
+    const empty = await create({ task: '', executionDate: minutesFromNow(5) });
+    assert.strictEqual(empty.status, 400);
+    assert.strictEqual(empty.body.code, 'taskRequired');
     assert.strictEqual((await create({ task: 'x', executionDate: 'not a date' })).status, 400);
     assert.strictEqual((await create({ task: 'x', executionDate: minutesFromNow(5), recurrence: 'hourly' })).status, 400);
   });
@@ -99,6 +101,7 @@ describe('reminders', () => {
       .field('executionDate', minutesFromNow(30))
       .attach('recording', Buffer.from('<script>'), { filename: 'x.html', contentType: 'text/html' });
     assert.strictEqual(bad.status, 400);
+    assert.strictEqual(bad.body.code, 'audioOnly');
 
     await api().delete(`/api/reminders/${ok.body._id}`).set('Authorization', me.auth);
   });

@@ -30,6 +30,7 @@ describe('auth', () => {
     assert.ok(ok.body.token);
     const bad = await api().post('/api/auth/login').send({ username: 'david', password: 'wrong' });
     assert.strictEqual(bad.status, 401);
+    assert.strictEqual(bad.body.code, 'badCredentials');
     const missing = await api().post('/api/auth/login').send({ username: 'nobody', password: 'secret123' });
     assert.strictEqual(missing.status, 401);
   });
